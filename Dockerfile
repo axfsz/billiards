@@ -13,6 +13,6 @@ COPY --chown=node:node billiards.html ./public/billiards.html
 RUN mkdir -p /app/public/assets /app/data && chown -R node:node /app/data
 
 USER node
-EXPOSE 8088
+EXPOSE 8188
 VOLUME ["/app/public", "/app/data"]
 CMD ["node", "server.js"]

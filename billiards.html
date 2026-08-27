@@ -954,12 +954,16 @@ function initials(value) {
 function setHomeError(message = "") { document.getElementById("homeError").textContent = message; }
 
 function applyI18n() {
+  const leadingText = (selector, value) => { const element = document.querySelector(selector); if (element?.firstChild?.nodeType === Node.TEXT_NODE) element.firstChild.nodeValue = value; };
   document.documentElement.lang = settings.language;
   document.getElementById("homeTitle").textContent = t("homeTitle");
   document.getElementById("homeIntro").textContent = t("homeIntro");
   document.getElementById("homePanelTitle").textContent = homeMode === "invite-link" ? t("invitedTitle") : t("ready");
   document.getElementById("homePanelCopy").textContent = homeMode === "invite-link" ? t("inviteLoading") : t("chooseStart");
   document.getElementById("proofNoLogin").textContent = t("noLogin");
+  document.getElementById("proofEight").textContent = settings.language === "en" ? "Chinese 8-ball" : "中式八球";
+  document.getElementById("proofSnooker").textContent = settings.language === "en" ? "Snooker" : "斯诺克";
+  document.getElementById("homeFooter").textContent = settings.language === "en" ? "Anonymous play · your nickname is only used for this match" : "匿名进入，昵称只用于本次球局";
   document.getElementById("modeSel").options[0].textContent = settings.language === "en" ? "Chinese 8-ball" : "中式八球";
   document.getElementById("modeSel").options[1].textContent = settings.language === "en" ? "Snooker" : "斯诺克";
   document.getElementById("homeMode").options[0].textContent = settings.language === "en" ? "Chinese 8-ball" : "中式八球";
@@ -978,6 +982,15 @@ function applyI18n() {
   document.getElementById("languageSettingLabel").textContent = t("language");
   document.getElementById("settingsRulesBtn").textContent = t("rules");
   document.getElementById("settingsExitBtn").textContent = t("exit");
+  document.getElementById("soundSettingHelp").textContent = settings.language === "en" ? "Shot, collision, and ambience audio" : "击球、碰撞和环境声音";
+  document.getElementById("aimSettingHelp").textContent = settings.language === "en" ? "Choose the prediction line length" : "控制辅助线预测距离";
+  document.getElementById("hapticSettingHelp").textContent = settings.language === "en" ? "Light feedback on supported mobile devices" : "移动设备上的轻触反馈";
+  document.getElementById("languageSettingHelp").textContent = settings.language === "en" ? "Interface language" : "界面显示语言";
+  leadingText(".stats > .chip.sel", settings.language === "en" ? "Game " : "模式 ");
+  leadingText("#moreMenu .chip:nth-of-type(1)", settings.language === "en" ? "Cue " : "球杆 ");
+  leadingText("#moreMenu .chip:nth-of-type(2)", settings.language === "en" ? "Room " : "情景 ");
+  leadingText("#moreMenu .chip:nth-of-type(3)", settings.language === "en" ? "Music " : "音乐 ");
+  document.getElementById("muteBtn").textContent = settings.language === "en" ? (muted ? "Sound: off" : "Sound: on") : (muted ? "音效：关" : "音效：开");
   document.getElementById("moreBtn").textContent = settings.language === "en" ? "More" : "更多";
   document.getElementById("rulesBtn").textContent = settings.language === "en" ? "Rules" : "规则";
   if (!online.room) document.getElementById("onlineBtn").textContent = settings.language === "en" ? "Online match" : "在线对局";
@@ -986,6 +999,10 @@ function applyI18n() {
   document.getElementById("leaveLocalBtn").textContent = settings.language === "en" ? "Leave local game" : "退出本地双人";
   document.getElementById("confirmPlacementBtn").textContent = settings.language === "en" ? "Confirm" : "确认摆放";
   document.getElementById("restorePlacementBtn").textContent = settings.language === "en" ? "Restore" : "恢复位置";
+  document.querySelector(".power-control > span").textContent = settings.language === "en" ? "Power" : "力度";
+  document.querySelector(".desktop-hint").innerHTML = settings.language === "en" ? "<em>Move the mouse</em> to aim · <em>Hold the left button</em> for power · <em>Release</em> to shoot" : "<em>移动鼠标</em> 瞄准 · <em>按住左键</em> 蓄力（来回摆动）· <em>松开</em> 出杆";
+  document.querySelector(".touch-hint").innerHTML = settings.language === "en" ? "<em>Drag the table</em> to aim · <em>set power</em> · press <em>Shoot</em>" : "<em>拖动球桌</em> 瞄准 · <em>调节力度</em> · 点击 <em>击球</em>";
+  setFocusClass(document.body.classList.contains("mobile-focus"));
   document.querySelectorAll(".player").forEach(player => player.dataset.currentLabel = settings.language === "en" ? "TURN" : "当前");
   document.getElementById("placementTitle").textContent = t("ballInHand");
   document.getElementById("again").textContent = t("rematch");
@@ -1576,7 +1593,7 @@ function setupControls() {
     muted = !muted;
     settings.sound = !muted; saveSettings(); document.getElementById("soundSetting").checked = settings.sound;
     if (MG) MG.gain.value = muted ? 0 : 1;
-    mb.textContent = muted ? "音效：关" : "音效：开";
+    mb.textContent = settings.language === "en" ? (muted ? "Sound: off" : "Sound: on") : (muted ? "音效：关" : "音效：开");
     mb.classList.toggle("off", muted);
   });
   const moreBtn = document.getElementById("moreBtn");
@@ -1600,6 +1617,12 @@ function setupControls() {
     document.getElementById("rulesBody").innerHTML = mode === "eight"
       ? `<p>本地双人 CBSA 中式八球规则。</p><ul><li><strong>摆球与开球：</strong>15 球三角摆放，顶球在置球点，8 号球位于第三排中央，底角各一颗全色球和花色球。新局 Player 1 开球，胜者下一局开球。</li><li><strong>合法开球：</strong>至少一颗目标球入袋，或至少 4 颗不同目标球碰库。非法开球或开球犯规时，对手获得开球线后的互动自由球，下一杆必须先击打开球线前方目标球。</li><li><strong>8 号球开球入袋：</strong>本游戏采用整组重摆，由该局原开球者重新开球，并重置双方连续犯规次数。</li><li><strong>开放球台：</strong>开球永不分组。首杆合法非开球进球决定分组；同杆两组均入袋时，以最先记录的入袋球组为准。</li><li><strong>合法击球：</strong>有本组球时必须先碰本组，清组后必须先碰 8 号球。合法首次接触后须有目标球入袋或任一球碰库。只有合法打进至少一颗本组球才能续杆；对方球入袋后留袋但不能单独续杆。</li><li><strong>犯规：</strong>普通犯规给对手全台自由球；开球犯规给线后自由球。个人连续第三次犯规直接负局；合法击球会将该球员自己的连续犯规归零，连续两次时 HUD 警告。</li><li><strong>8 号球：</strong>清组前入袋、与本组最后一球同杆入袋、出界，或入袋同时犯规均负。清组后合法入袋获胜。打 8 时若仅犯规而 8 仍在台面，则只判普通犯规和全台自由球。</li><li><strong>僵局：</strong>双方同意后点击“僵局重摆”，由本局原开球者重新开球。</li></ul><p><strong>浏览器限制：</strong>以 Player 1 代替开球争夺；无法检测身体/球杆意外触球、推杆与连击，也无法主观判断僵局，因此僵局由玩家手动确认。</p>`
       : `<p>本地双人简化斯诺克。红球 1 分；黄、绿、棕、蓝、粉、黑依次为 2 至 7 分。</p><ul><li>有红球时按“红球、任一彩球”交替；红球留袋，彩球回到点位。</li><li>红球清完并完成最后一次彩球后，依次清黄、绿、棕、蓝、粉、黑。</li><li>合法进球继续；未进球或犯规交换球权。白球落袋、未碰球、先碰错球均犯规。</li><li>犯规给对手至少 4 分，或相关球的更高分值。最终黑球落袋后按总分判胜负。</li></ul><p><strong>简化说明：</strong>不处理自由球、贴球、重摆黑球决胜、miss 判罚与彩球口头指定；“任一彩球”以首次碰到的彩球为准。</p>`;
+    if (settings.language === "en") {
+      document.getElementById("rulesTitle").textContent = mode === "eight" ? "Chinese 8-ball rules" : "Snooker rules";
+      document.getElementById("rulesBody").innerHTML = mode === "eight"
+        ? `<p>Local two-player Chinese 8-ball.</p><ul><li><strong>Break:</strong> pot an object ball or drive at least four object balls to rails.</li><li><strong>Open table:</strong> the first legal non-break pot assigns solids or stripes.</li><li><strong>Legal shot:</strong> contact your group first, then pot a ball or drive any ball to a rail.</li><li><strong>Foul:</strong> the opponent receives ball in hand. A third consecutive foul loses the rack.</li><li><strong>8-ball:</strong> clear your group before legally potting the 8-ball to win.</li></ul>`
+        : `<p>Local two-player simplified snooker.</p><ul><li>Alternate between a red and any color while reds remain.</li><li>After the reds, clear yellow, green, brown, blue, pink, and black in order.</li><li>A legal pot continues the break; a miss or foul changes the turn.</li><li>Fouls award at least four points, or the value of the relevant higher-value ball.</li></ul>`;
+    }
     modal.classList.add("show");
     closeMore();
     updateDialogLock();
@@ -1678,7 +1701,7 @@ function setupControls() {
   document.getElementById("settingsBtn").addEventListener("click", openSettings);
   document.getElementById("closeSettings").addEventListener("click", closeSettings);
   settingsModal.addEventListener("click", e => { if (e.target === settingsModal) closeSettings(); });
-  document.getElementById("soundSetting").addEventListener("change", e => { settings.sound = e.target.checked; muted = !settings.sound; if (MG) MG.gain.value = muted ? 0 : 1; mb.textContent = muted ? "音效：关" : "音效：开"; mb.classList.toggle("off", muted); saveSettings(); });
+  document.getElementById("soundSetting").addEventListener("change", e => { settings.sound = e.target.checked; muted = !settings.sound; if (MG) MG.gain.value = muted ? 0 : 1; mb.textContent = settings.language === "en" ? (muted ? "Sound: off" : "Sound: on") : (muted ? "音效：关" : "音效：开"); mb.classList.toggle("off", muted); saveSettings(); });
   document.getElementById("aimSetting").addEventListener("change", e => { settings.aimAssist = e.target.value; saveSettings(); });
   document.getElementById("hapticSetting").addEventListener("change", e => { settings.haptics = e.target.checked; saveSettings(); });
   document.getElementById("languageSetting").addEventListener("change", e => { settings.language = e.target.value; saveSettings(); applyI18n(); renderOnlineLobby(); refreshHud(); });
@@ -1697,8 +1720,8 @@ function setupControls() {
 function setFocusClass(active) {
   document.body.classList.toggle("mobile-focus", active);
   const button = document.getElementById("focusBtn");
-  button.textContent = active ? "退出专注" : "横屏专注";
-  button.setAttribute("aria-label", active ? "退出横屏专注模式" : "进入横屏专注模式");
+  button.textContent = settings.language === "en" ? (active ? "Exit focus" : "Landscape") : (active ? "退出专注" : "横屏专注");
+  button.setAttribute("aria-label", settings.language === "en" ? (active ? "Exit landscape focus mode" : "Enter landscape focus mode") : (active ? "退出横屏专注模式" : "进入横屏专注模式"));
 }
 
 async function enterMobileFocus() {

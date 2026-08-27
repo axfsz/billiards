@@ -78,7 +78,10 @@ test('mobile home, errors, onboarding, and English settings remain usable', { ti
     await page.locator('#languageSetting').selectOption('en');
     assert.equal(await page.locator('#onlineBtn').textContent(), 'Online match');
     assert.match(await page.locator('#matchInfoText').textContent(), /break|Target/);
-    await page.locator('#closeSettings').click();
+    assert.match(await page.locator('.stats > .chip.sel').textContent(), /^Game/);
+    await page.locator('#settingsRulesBtn').click();
+    await page.getByRole('heading', { name: 'Chinese 8-ball rules' }).waitFor();
+    await page.locator('#closeRules').click();
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     assert.deepEqual(errors, []);
   } finally {

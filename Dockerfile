@@ -1,7 +1,7 @@
 FROM node:24-alpine3.22
 
 ENV NODE_ENV=production \
-    PORT=8088 \
+    PORT=8188 \
     PUBLIC_DIR=/app/public \
     DATA_DIR=/app/data
 

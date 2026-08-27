@@ -10,9 +10,10 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test",
-    "test:ui": "node --test test/billiards-ui.test.js"
+    "test:ui": "node --test test/billiards-ui.test.js test/product-ux.test.js"
   },
   "dependencies": {
+    "qrcode": "^1.5.4",
     "ws": "8.21.3"
   },
   "devDependencies": {

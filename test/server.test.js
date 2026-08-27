@@ -128,6 +128,22 @@ test('only supported game modes can be created', async () => {
   assert.equal(invalid.json.error.code, 'INVALID_MODE');
 });
 
+test('invite preview exposes only join context and provides a same-origin QR code', async () => {
+  const p1 = await createPlayer('Table Host', 'snooker');
+  const preview = await request(`/api/invites/${p1.room.invite.token}`);
+  assert.equal(preview.response.status, 200);
+  assert.deepEqual(preview.json.invite, {
+    inviter_nickname: 'Table Host', mode: 'snooker', status: 'WAITING', expires_at: p1.room.invite.expires_at,
+  });
+  assert.equal(JSON.stringify(preview.json).includes(p1.room.room_id), false);
+  assert.equal(JSON.stringify(preview.json).includes(p1.room.invite.code), false);
+
+  const qr = await fetch(`${base}/api/invites/${p1.room.invite.token}/qr.svg`);
+  assert.equal(qr.status, 200);
+  assert.match(qr.headers.get('content-type'), /^image\/svg\+xml/);
+  assert.match(await qr.text(), /<svg/);
+});
+
 test('room state is member-only and does not expose user IDs or invite secrets to Player 2', async () => {
   const p1 = await createPlayer();
   const p2 = await join(p1.room.invite.token);

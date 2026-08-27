@@ -7,6 +7,7 @@
 <link rel="icon" href="data:,">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { height: 100%; }
   body {
     background: radial-gradient(1200px 800px at 50% 20%, #1a241e 0%, #0b0f0c 65%, #060806 100%);
@@ -75,7 +76,7 @@
     padding: 8px 16px; font: inherit; font-size: 13px;
   }
   #leaveLocalBtn:hover { color: #ffe1da; border-color: rgba(231,105,91,.8); background: rgba(100,32,28,.22); }
-  #rulesBtn, #stalemateBtn {
+  #rulesBtn, #settingsBtn, #stalemateBtn {
     cursor: pointer; background: transparent; color: #d8cfb4;
     border: 1px solid rgba(216,180,90,.3); border-radius: 999px;
     padding: 7px 15px; font: inherit; font-size: 13px;
@@ -220,7 +221,7 @@
     .chip { min-height: 42px; display: inline-flex; align-items: center; padding: 5px 9px; }
     .stats .optional-control { display: none; }
     select { min-height: 32px; font-size: 13px; }
-    #rulesBtn, #stalemateBtn, #restart, #leaveLocalBtn { min-height: 42px; padding: 7px 11px; }
+    #rulesBtn, #settingsBtn, #stalemateBtn, #restart, #leaveLocalBtn { min-height: 42px; padding: 7px 11px; }
     .matchbar { grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 7px; margin: 0 0 6px; }
     .player { padding: 7px 9px; }
     .player strong { font-size: 14px; }
@@ -271,6 +272,12 @@
     body { align-items: flex-start; }
   }
   body.dialog-open { overflow: hidden; }
+  body.home-active .room .bar, body.home-active .room .matchbar, body.home-active .room > .hint { visibility: hidden; }
+  body.game-active.coarse-ui { height: 100dvh; overflow: hidden; }
+  body.game-active.coarse-ui .room { height: calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+  body.game-active.coarse-ui #gameShell { min-height: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; }
+  body.game-active.coarse-ui .stage { min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  body.game-active.coarse-ui canvas { width: auto; height: auto; max-width: 100%; max-height: 100%; }
   .more-menu { display: contents; }
   #moreBtn { display: none; }
   #closeRules { min-width: 44px; min-height: 44px; }
@@ -290,7 +297,7 @@
   @media (any-pointer: coarse) {
     body { align-items: flex-start; padding: calc(8px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left)); }
     button, select, .chip { min-height: 44px; }
-    #rulesBtn, #stalemateBtn, #restart, #leaveLocalBtn { min-height: 44px; }
+    #rulesBtn, #settingsBtn, #stalemateBtn, #restart, #leaveLocalBtn { min-height: 44px; }
     canvas { touch-action: none; }
     .mobile-controls { display: grid; padding-bottom: 6px; }
     #statusToast { display: block; }
@@ -337,9 +344,177 @@
     .stage { min-height: 0; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
     canvas { min-width: 0; min-height: 0; width: auto; height: auto; max-width: 100%; max-height: 100%; }
   }
+  :root {
+    --ink: #f4f0e5;
+    --muted: #aab5ae;
+    --panel: #111916;
+    --panel-strong: #18231e;
+    --line: rgba(232, 221, 189, .18);
+    --gold: #dfbd65;
+    --gold-strong: #f1d27a;
+    --green: #3ea66a;
+    --red: #e56f65;
+    --blue: #68a9d6;
+    --control-radius: 7px;
+  }
+  button, input, select { letter-spacing: 0; }
+  button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid rgba(241, 210, 122, .72); outline-offset: 3px;
+  }
+  .home-screen {
+    position: fixed; inset: 0; z-index: 40; display: grid; place-items: center;
+    padding: max(20px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+    background: rgba(5, 9, 7, .94); overflow: auto;
+  }
+  .home-screen[hidden] { display: none; }
+  .home-shell { width: min(920px, 100%); display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(320px, .92fr); gap: clamp(24px, 5vw, 70px); align-items: center; }
+  .home-brand { align-self: stretch; display: flex; flex-direction: column; justify-content: center; min-height: 420px; padding: 34px 0; }
+  .home-mark { color: var(--gold); font: 600 13px Georgia, serif; text-transform: uppercase; letter-spacing: 4px; }
+  .home-brand h1 { margin-top: 16px; color: var(--ink); font: 500 clamp(44px, 7vw, 82px)/1.02 Georgia, "Songti SC", serif; letter-spacing: 0; }
+  .home-brand p { max-width: 510px; margin-top: 22px; color: var(--muted); font-size: 17px; line-height: 1.75; }
+  .home-proof { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
+  .home-proof span { padding: 7px 10px; border: 1px solid var(--line); border-radius: 5px; color: #d7ddd8; font-size: 12px; }
+  .home-panel { padding: 26px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); box-shadow: 0 24px 70px rgba(0,0,0,.34); }
+  .home-panel h2 { color: var(--ink); font: 500 26px/1.25 Georgia, "Songti SC", serif; }
+  .home-panel > p { margin-top: 7px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+  .home-actions { display: grid; gap: 10px; margin-top: 22px; }
+  .home-action { width: 100%; min-height: 58px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; padding: 12px 15px; border: 1px solid var(--line); border-radius: var(--control-radius); color: var(--ink); background: #1a2520; font: 600 15px inherit; text-align: left; cursor: pointer; }
+  .home-action small { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; font-weight: 400; }
+  .home-action::after { content: "›"; color: var(--gold); font-size: 24px; }
+  .home-action.primary { color: #1e190b; border-color: var(--gold-strong); background: var(--gold-strong); }
+  .home-action.primary small, .home-action.primary::after { color: #514520; }
+  .home-action:hover { border-color: rgba(241,210,122,.7); transform: translateY(-1px); }
+  .home-form { display: grid; gap: 14px; margin-top: 20px; }
+  .home-form[hidden], .home-actions[hidden] { display: none; }
+  .home-form label { display: grid; gap: 6px; color: #d9dfda; font-size: 13px; }
+  .home-form input, .home-form select { width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--control-radius); color: var(--ink); background: #09100d; font: 15px inherit; user-select: text; }
+  .home-form-actions { display: grid; grid-template-columns: 1fr 1.5fr; gap: 9px; }
+  .ui-btn { min-height: 46px; padding: 9px 14px; border: 1px solid var(--line); border-radius: var(--control-radius); color: var(--ink); background: #1a2520; font: 600 14px inherit; cursor: pointer; }
+  .ui-btn.primary { color: #201a09; border-color: var(--gold-strong); background: var(--gold-strong); }
+  .ui-btn.danger { color: #ffe2de; border-color: rgba(229,111,101,.55); background: #341a19; }
+  .ui-btn:disabled { opacity: .52; cursor: progress; transform: none; }
+  .home-error { min-height: 20px; color: #ffaaa2; font-size: 12px; line-height: 1.5; }
+  .invite-summary { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; margin-top: 18px; padding: 13px; border: 1px solid var(--line); border-radius: var(--control-radius); background: #0c1410; }
+  .avatar { width: 44px; height: 44px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 50%; color: #172019; background: var(--gold); font: 700 15px Georgia, serif; }
+  .invite-summary strong { display: block; color: var(--ink); }
+  .invite-summary span { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+  .home-footer { margin-top: 18px; color: #77847d; font-size: 11px; text-align: center; }
+  .turn-banner { position: absolute; z-index: 7; top: 24px; left: 50%; transform: translate(-50%, -14px); padding: 9px 18px; border: 1px solid rgba(241,210,122,.46); border-radius: 5px; color: #fff4cf; background: rgba(14,23,18,.94); box-shadow: 0 10px 24px rgba(0,0,0,.35); font: 700 13px inherit; opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s; }
+  .turn-banner.show { opacity: 1; transform: translate(-50%, 0); }
+  .network-overlay { position: absolute; inset: 10px; z-index: 8; display: none; place-items: center; border-radius: 14px; color: var(--ink); background: rgba(5,10,7,.78); backdrop-filter: blur(5px); text-align: center; }
+  .network-overlay.show { display: grid; }
+  .network-overlay strong { display: block; font: 500 25px Georgia, "Songti SC", serif; }
+  .network-overlay span { display: block; margin-top: 8px; color: var(--muted); font-size: 13px; }
+  .network-pulse { width: 28px; height: 28px; margin: 0 auto 16px; border: 3px solid rgba(255,255,255,.16); border-top-color: var(--blue); border-radius: 50%; animation: spin .85s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .placement-actions { position: absolute; z-index: 7; left: 18px; right: 18px; bottom: 18px; display: none; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; margin: 0; padding: 10px 12px; border: 1px solid rgba(104,169,214,.35); border-radius: 7px; background: rgba(16,27,32,.96); box-shadow: 0 10px 28px rgba(0,0,0,.35); }
+  body.placement-active .placement-actions { display: grid; }
+  .placement-actions strong { color: #ddecf6; font-size: 13px; }
+  .placement-actions span { display: block; margin-top: 2px; color: #9db2bf; font-size: 11px; }
+  #overlay { padding: 24px; overflow: auto; }
+  #overlay h2 { font-size: clamp(30px, 5vw, 50px); letter-spacing: 0; }
+  .result-score { color: #f7e7b7; font: 600 21px Georgia, serif; }
+  .result-stats { width: min(620px, 100%); display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .result-stat { padding: 10px 7px; border: 1px solid var(--line); border-radius: 6px; background: rgba(255,255,255,.04); text-align: center; }
+  .result-stat b { display: block; color: var(--ink); font-size: 17px; }
+  .result-stat span { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+  .result-actions { width: min(680px, 100%); display: grid; grid-template-columns: 1.35fr repeat(3, 1fr); gap: 8px; }
+  #again { margin: 0; min-height: 46px; padding: 9px 16px; border-radius: 7px; font-size: 14px; letter-spacing: 0; }
+  .settings-card { width: min(520px,100%); max-height: calc(100dvh - 40px); overflow: auto; padding: 24px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); box-shadow: 0 30px 90px rgba(0,0,0,.75); }
+  .settings-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .settings-head h2 { color: var(--ink); font: 500 25px Georgia, "Songti SC", serif; }
+  .icon-close { width: 44px; height: 44px; border: 0; color: var(--muted); background: transparent; font-size: 25px; cursor: pointer; }
+  .settings-list { display: grid; gap: 1px; margin-top: 18px; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; background: var(--line); }
+  .setting-row { min-height: 56px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; background: #111a16; color: var(--ink); }
+  .setting-row span { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .setting-row select, .setting-row input { min-height: 36px; }
+  .toggle { width: 48px; height: 28px; position: relative; appearance: none; border-radius: 14px; background: #3a4540; cursor: pointer; }
+  .toggle::after { content: ""; position: absolute; width: 22px; height: 22px; top: 3px; left: 3px; border-radius: 50%; background: #eef1ee; transition: transform .16s; }
+  .toggle:checked { background: var(--green); }
+  .toggle:checked::after { transform: translateX(20px); }
+  .onboarding { position: absolute; z-index: 6; left: 50%; bottom: 26px; width: min(420px, calc(100% - 28px)); transform: translateX(-50%); padding: 13px; border: 1px solid rgba(241,210,122,.44); border-radius: 7px; background: rgba(10,17,13,.95); box-shadow: 0 12px 34px rgba(0,0,0,.42); }
+  .onboarding[hidden] { display: none; }
+  .onboarding-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .onboarding b { color: var(--ink); font-size: 13px; }
+  .onboarding p { margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+  .onboarding button { min-height: 34px; padding: 5px 10px; }
+  .matchbar .player.active::before { content: attr(data-current-label); float: right; margin-left: 6px; padding: 2px 5px; border-radius: 3px; color: #1d190b; background: var(--gold); font-size: 9px; font-weight: 700; }
+  .online-card { border-radius: 8px; background: var(--panel); }
+  .lobby-meta { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 10px 0 16px; }
+  .lobby-meta span { padding: 5px 8px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); font-size: 11px; }
+  .lobby-vs { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; margin: 15px 0; }
+  .lobby-seat { min-width: 0; padding: 14px 9px; border: 1px solid var(--line); border-radius: 7px; background: #0d1511; text-align: center; }
+  .lobby-seat .avatar { margin: 0 auto 8px; }
+  .lobby-seat b { display: block; overflow: hidden; color: var(--ink); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+  .lobby-seat span { display: block; margin-top: 3px; color: var(--green); font-size: 10px; }
+  .lobby-seat.waiting .avatar { color: #8c9992; background: #28342e; }
+  .lobby-seat.waiting span { color: var(--muted); }
+  .lobby-vs > b { color: var(--gold); font: 500 16px Georgia, serif; }
+  .invite-tools { display: grid; grid-template-columns: 124px 1fr; gap: 12px; align-items: center; }
+  .invite-qr { width: 124px; height: 124px; padding: 7px; border-radius: 6px; background: white; }
+  .invite-qr img { width: 100%; height: 100%; display: block; }
+  .invite-details { min-width: 0; }
+  .invite-link-display { margin-top: 7px; padding: 8px; overflow: hidden; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); background: #09100d; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; user-select: text; }
+  .share-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 12px; }
+  .share-grid button { min-height: 42px; border-radius: 7px; }
+  .waiting-line { margin-top: 14px; color: var(--muted); font-size: 12px; text-align: center; }
+  .waiting-line::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: var(--blue); animation: waitingPulse 1.4s ease-in-out infinite; }
+  @keyframes waitingPulse { 50% { opacity: .3; transform: scale(.7); } }
+  @media (max-width: 760px) {
+    .home-screen { place-items: start center; }
+    .home-shell { grid-template-columns: 1fr; gap: 0; }
+    .home-brand { min-height: auto; padding: 24px 2px 22px; }
+    .home-brand h1 { font-size: 48px; }
+    .home-brand p { margin-top: 14px; font-size: 14px; }
+    .home-proof { margin-top: 17px; }
+    .home-panel { padding: 20px; }
+    .result-stats { grid-template-columns: repeat(2, 1fr); }
+    .result-actions { grid-template-columns: repeat(3, 1fr); }
+    #again { grid-column: 1 / -1; }
+    .invite-tools { grid-template-columns: 96px 1fr; }
+    .invite-qr { width: 96px; height: 96px; }
+    .placement-actions { grid-template-columns: 1fr 1fr; }
+    .placement-copy { grid-column: 1 / -1; }
+  }
+  @media (max-width: 420px) {
+    .home-brand h1 { font-size: 41px; }
+    .home-proof span:nth-child(3) { display: none; }
+    .home-panel { padding: 17px; }
+    .home-action { min-height: 54px; }
+    .invite-tools { grid-template-columns: 1fr; justify-items: center; }
+    .invite-details { width: 100%; }
+  }
 </style>
 </head>
 <body>
+<section class="home-screen" id="homeView" aria-labelledby="homeTitle">
+  <div class="home-shell">
+    <div class="home-brand">
+      <div class="home-mark">EMERALD BILLIARDS</div>
+      <h1 id="homeTitle">翡翠球房</h1>
+      <p id="homeIntro">一张认真做好的在线球桌。本地同屏开局，或发一条链接邀请好友。</p>
+      <div class="home-proof"><span id="proofEight">中式八球</span><span id="proofSnooker">斯诺克</span><span id="proofNoLogin">无需注册</span></div>
+    </div>
+    <div class="home-panel">
+      <h2 id="homePanelTitle">准备开球</h2>
+      <p id="homePanelCopy">选择一种开始方式，默认使用中式八球。</p>
+      <div class="home-actions" id="homeActions">
+        <button class="home-action primary" id="quickStartBtn" type="button"><span><b>快速开始</b><small>在当前设备本地双人</small></span></button>
+        <button class="home-action" id="inviteFriendBtn" type="button"><span><b>邀请好友</b><small>创建房间并分享链接</small></span></button>
+        <button class="home-action" id="joinRoomBtn" type="button"><span><b>加入房间</b><small>输入邀请码或粘贴邀请链接</small></span></button>
+      </div>
+      <form class="home-form" id="homeForm" hidden>
+        <div class="invite-summary" id="inviteSummary" hidden><div class="avatar" id="inviteAvatar">P1</div><div><strong id="inviteHeadline"></strong><span id="inviteMeta"></span></div></div>
+        <label id="homeNameLabel">昵称<input id="homeNickname" maxlength="32" autocomplete="nickname" required></label>
+        <label id="homeInviteLabel" hidden>邀请码或邀请链接<input id="homeInviteValue" autocomplete="off" autocapitalize="characters"></label>
+        <label id="homeModeLabel">玩法<select id="homeMode"><option value="eight">中式八球</option><option value="snooker">斯诺克</option></select></label>
+        <div class="home-error" id="homeError" role="alert"></div>
+        <div class="home-form-actions"><button class="ui-btn" id="homeBackBtn" type="button">返回</button><button class="ui-btn primary" id="homeSubmitBtn" type="submit">继续</button></div>
+      </form>
+      <div class="home-footer" id="homeFooter">匿名进入，昵称只用于本次球局</div>
+    </div>
+  </div>
+</section>
 <div class="room">
   <div class="bar">
     <div class="title">翡翠球房<small>EMERALD BILLIARDS</small></div>
@@ -360,6 +535,7 @@
           <select id="musicSel"></select>
         </label>
         <button id="muteBtn" class="optional-control">音效：开</button>
+        <button id="settingsBtn" type="button">设置</button>
         <button id="rulesBtn">规则</button>
         <button id="onlineBtn" type="button">在线对局</button>
         <button id="stalemateBtn">僵局重摆</button>
@@ -377,11 +553,22 @@
     <div id="statusToast" role="status" aria-live="polite" aria-atomic="true"></div>
     <div class="stage">
       <canvas id="cv" aria-label="台球桌"></canvas>
+      <div class="turn-banner" id="turnBanner" role="status" aria-live="polite"></div>
+      <div class="network-overlay" id="networkOverlay" role="status" aria-live="assertive"><div><div class="network-pulse"></div><strong id="networkTitle"></strong><span id="networkDetail"></span></div></div>
+      <div class="onboarding" id="onboarding" hidden><div class="onboarding-top"><b id="onboardingTitle"></b><button class="ui-btn" id="onboardingNext" type="button"></button></div><p id="onboardingText"></p></div>
       <div id="overlay">
         <h2>清 台 达 成</h2>
         <p id="finalText"></p>
+        <div class="result-score" id="resultScore"></div>
+        <div class="result-stats" id="resultStats"></div>
+        <div class="result-actions">
         <button id="again">再 来 一 局</button>
+          <button class="ui-btn" id="newInviteBtn" type="button">邀请新好友</button>
+          <button class="ui-btn" id="shareResultBtn" type="button">分享战绩</button>
+          <button class="ui-btn" id="resultHomeBtn" type="button">返回首页</button>
+        </div>
       </div>
+      <div class="placement-actions" id="placementActions"><div class="placement-copy"><strong id="placementTitle">自由球模式</strong><span id="placementHelp">移动白球到绿色合法区域</span></div><button class="ui-btn" id="restorePlacementBtn" type="button">恢复位置</button><button class="ui-btn primary" id="confirmPlacementBtn" type="button">确认摆放</button></div>
     </div>
     <div class="mobile-controls" id="mobileControls">
       <label class="power-control" for="touchPower"><span>力度</span><input id="touchPower" type="range" min="5" max="100" value="45" step="1" aria-label="击球力度"><output id="powerPct" for="touchPower">45%</output></label>
@@ -393,6 +580,19 @@
     </div>
   </div>
   <div class="hint"><span class="desktop-hint"><em>移动鼠标</em> 瞄准 · <em>按住左键</em> 蓄力（来回摆动）· <em>松开</em> 出杆</span><span class="touch-hint"><em>拖动球桌</em> 瞄准 · <em>调节力度</em> · 点击 <em>击球</em></span></div>
+</div>
+
+<div class="modal" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+  <div class="settings-card">
+    <div class="settings-head"><h2 id="settingsTitle">设置</h2><button class="icon-close" id="closeSettings" type="button" aria-label="关闭设置">×</button></div>
+    <div class="settings-list">
+      <label class="setting-row"><div><b id="soundSettingLabel">声音</b><span id="soundSettingHelp">击球、碰撞和环境声音</span></div><input class="toggle" id="soundSetting" type="checkbox" checked></label>
+      <label class="setting-row"><div><b id="aimSettingLabel">瞄准辅助</b><span id="aimSettingHelp">控制辅助线预测距离</span></div><select id="aimSetting"><option value="off">OFF</option><option value="short">SHORT</option><option value="normal">NORMAL</option></select></label>
+      <label class="setting-row"><div><b id="hapticSettingLabel">振动反馈</b><span id="hapticSettingHelp">移动设备上的轻触反馈</span></div><input class="toggle" id="hapticSetting" type="checkbox" checked></label>
+      <label class="setting-row"><div><b id="languageSettingLabel">语言</b><span id="languageSettingHelp">界面显示语言</span></div><select id="languageSetting"><option value="zh-CN">简体中文</option><option value="en">English</option></select></label>
+    </div>
+    <div class="home-actions"><button class="ui-btn" id="settingsRulesBtn" type="button">查看规则</button><button class="ui-btn danger" id="settingsExitBtn" type="button">退出当前球局</button></div>
+  </div>
 </div>
 
 <div class="modal" id="rulesModal" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
@@ -417,6 +617,48 @@
 "use strict";
 
 const W = 1100, H = 640;
+const I18N = {
+  "zh-CN": {
+    homeTitle: "翡翠球房", homeIntro: "一张认真做好的在线球桌。本地同屏开局，或发一条链接邀请好友。",
+    ready: "准备开球", chooseStart: "选择一种开始方式，默认使用中式八球。", quick: "快速开始", quickSub: "在当前设备本地双人",
+    invite: "邀请好友", inviteSub: "创建房间并分享链接", join: "加入房间", joinSub: "输入邀请码或粘贴邀请链接",
+    nickname: "昵称", mode: "玩法", inviteValue: "邀请码或邀请链接", back: "返回", continue: "继续", create: "创建房间", joinGame: "加入比赛",
+    localStart: "本地双人 · 中式八球", invitedTitle: "好友邀请你一起打台球", inviteLoading: "正在读取邀请…", noLogin: "无需注册",
+    settings: "设置", sound: "声音", aim: "瞄准辅助", haptic: "振动反馈", language: "语言", rules: "查看规则", exit: "退出当前球局",
+    yourTurn: "轮到你", playerTurn: name => `轮到 ${name}`, waitingTurn: name => `等待 ${name} 击球`, ballInHand: "自由球模式",
+    reconnecting: "正在重新连接…", reconnectDetail: "球局会在连接恢复后自动继续", peerOffline: "对方暂时离线", peerDetail: seconds => `正在等待重新连接 · ${seconds} 秒`, restored: "比赛已恢复",
+    onboarding1: "拖动调整瞄准方向", onboarding2: "调整击球力度", onboarding3: "点击击球，完成第一杆", next: "下一步", gotIt: "开始打球",
+    resultHome: "返回首页", shareResult: "分享战绩", rematch: "再来一局", copyCode: "复制邀请码", copyLink: "复制链接", systemShare: "系统分享",
+    whatsapp: "WhatsApp", telegram: "Telegram", cancelRoom: "取消房间", waitingFriend: "正在等待好友加入…", readyStatus: "READY", waitingStatus: "等待加入",
+    invalidInvite: "请输入有效的 8 位邀请码或邀请链接", unavailable: "在线服务暂不可用，请稍后再试。"
+  },
+  en: {
+    homeTitle: "Emerald Billiards", homeIntro: "A proper table in your browser. Play locally or invite a friend with one link.",
+    ready: "Ready to break", chooseStart: "Choose how to play. Chinese 8-ball is selected by default.", quick: "Quick start", quickSub: "Two players on this device",
+    invite: "Invite a friend", inviteSub: "Create a room and share a link", join: "Join a room", joinSub: "Enter a code or paste an invite link",
+    nickname: "Nickname", mode: "Game", inviteValue: "Invite code or link", back: "Back", continue: "Continue", create: "Create room", joinGame: "Join match",
+    localStart: "Local · Chinese 8-ball", invitedTitle: "A friend invited you to play", inviteLoading: "Loading invite…", noLogin: "No account needed",
+    settings: "Settings", sound: "Sound", aim: "Aim assist", haptic: "Haptics", language: "Language", rules: "Game rules", exit: "Leave current game",
+    yourTurn: "YOUR TURN", playerTurn: name => `${name}'s turn`, waitingTurn: name => `Waiting for ${name}`, ballInHand: "BALL IN HAND",
+    reconnecting: "Reconnecting…", reconnectDetail: "The match will continue automatically", peerOffline: "Opponent is offline", peerDetail: seconds => `Waiting for reconnection · ${seconds}s`, restored: "Match restored",
+    onboarding1: "Drag on the table to adjust your aim", onboarding2: "Choose your shot power", onboarding3: "Press Shoot to play your first shot", next: "Next", gotIt: "Play now",
+    resultHome: "Home", shareResult: "Share result", rematch: "Rematch", copyCode: "Copy code", copyLink: "Copy link", systemShare: "Share",
+    whatsapp: "WhatsApp", telegram: "Telegram", cancelRoom: "Cancel room", waitingFriend: "Waiting for your friend…", readyStatus: "READY", waitingStatus: "WAITING",
+    invalidInvite: "Enter a valid 8-character code or invite link", unavailable: "Online service is unavailable. Please try again."
+  }
+};
+const settingDefaults = { sound: true, aimAssist: "normal", haptics: true, language: navigator.language?.toLowerCase().startsWith("zh") ? "zh-CN" : "en" };
+function loadSettings() {
+  try { return { ...settingDefaults, ...JSON.parse(localStorage.getItem("billiards_settings") || "{}") }; }
+  catch (e) { return { ...settingDefaults }; }
+}
+let settings = loadSettings();
+function saveSettings() { try { localStorage.setItem("billiards_settings", JSON.stringify(settings)); } catch (e) {} }
+function t(key, ...args) { const value = (I18N[settings.language] || I18N["zh-CN"])[key] ?? I18N["zh-CN"][key] ?? key; return typeof value === "function" ? value(...args) : value; }
+const ALLOWED_EVENTS = new Set(["home_view","local_game_start","online_room_create","invite_copy","invite_share","room_join","game_start","shot","foul","disconnect","reconnect","game_finish","rematch_request","rematch_accept"]);
+function trackEvent(name, payload = {}) { if (ALLOWED_EVENTS.has(name)) console.debug("[metric]", name, payload); }
+let gameActive = false, homeMode = "menu", pendingInviteToken = "", matchStartedAt = Date.now(), lastTurnKey = "", lastNetworkState = "normal", onboardingStep = 0;
+let matchStats = [{ shots: 0, pots: 0, fouls: 0, streak: 0, maxStreak: 0 }, { shots: 0, pots: 0, fouls: 0, streak: 0, maxStreak: 0 }];
 const cv = document.getElementById("cv");
 const ctx = cv.getContext("2d");
 const coarseQuery = matchMedia("(any-pointer: coarse)");
@@ -468,7 +710,7 @@ let players = [];
 let snookerTarget = "red", clearanceIndex = -1;
 let placement = null, matchWinner = null;
 let mobilePower = .45, nativeFocusFullscreen = false;
-let kitchenRestriction = false;
+let kitchenRestriction = false, placementOrigin = null;
 let rackBreaker = 0, decisionResumeState = "aim";
 let domToastTimer = 0, dialogReturnFocus = null;
 const online = { room: null, ws: null, retry: 0, retryTimer: 0, replayTimer: 0, reconnectUntil: 0, pending: new Map(), rackId: null, appliedSnapshot: "", appliedEvents: new Set(), inputLocked: false, placementSending: false, placementNotice: "", leaveSubmitting: false, authorityShotId: null, queuedSnapshot: null, snapshotSending: false, decisionId: null, intentionalClose: false, pauseUntil: 0 };
@@ -476,9 +718,10 @@ const online = { room: null, ws: null, retry: 0, retryTimer: 0, replayTimer: 0, 
 function onlineRoleIndex(role = online.room?.me.role) { return role === "PLAYER_1" ? 0 : role === "PLAYER_2" ? 1 : -1; }
 function onlineRole(index) { return index === 0 ? "PLAYER_1" : "PLAYER_2"; }
 function onlineCanAct() {
-  return !online.room || (!online.inputLocked && !online.room.pending_shot && online.ws?.readyState === WebSocket.OPEN && online.room.status === "PLAYING" && online.room.turn === online.room.me.role && ["PLAYER_1", "PLAYER_2"].every(role => online.room.players[role]?.present));
+  return gameActive && (!online.room || (!online.inputLocked && !online.room.pending_shot && online.ws?.readyState === WebSocket.OPEN && online.room.status === "PLAYING" && online.room.turn === online.room.me.role && ["PLAYER_1", "PLAYER_2"].every(role => online.room.players[role]?.present)));
 }
 function onlineCanPlace() {
+  if (!gameActive) return false;
   if (!online.room) return true;
   const roomStateAllowed = online.room.status === "PLAYING" || (online.room.status === "PAUSED" && online.room.reason === "PLAYER_DISCONNECTED");
   const role = online.room.me.role;
@@ -513,6 +756,7 @@ if (coarseQuery.addEventListener) coarseQuery.addEventListener("change", updateP
 else if (coarseQuery.addListener) coarseQuery.addListener(updatePointerCapability);
 
 function haptic(pattern) {
+  if (!settings.haptics) return;
   if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
   try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {}
 }
@@ -526,13 +770,13 @@ function setMobilePower(value, applyToCue = state === "aim") {
 }
 
 function syncMobileControls() {
-  const modalOpen = document.getElementById("rulesModal").classList.contains("show") || document.getElementById("onlineModal").classList.contains("show");
+  const modalOpen = !document.getElementById("homeView").hidden || document.getElementById("rulesModal").classList.contains("show") || document.getElementById("onlineModal").classList.contains("show") || document.getElementById("settingsModal").classList.contains("show");
   const shoot = document.getElementById("shootBtn");
   const placementValid = state === "placement" && placement && placement.valid;
   const actionAllowed = state === "placement" ? onlineCanPlace() : onlineCanAct();
   shoot.disabled = modalOpen || !actionAllowed || (state !== "aim" && !placementValid);
-  shoot.textContent = online.placementSending && state === "placement" ? "正在确认…" : state === "placement" ? "确认位置" : state === "decision" ? "等待选择" : state === "roll" ? "球在滚动" : state === "over" ? "本局结束" : "击球";
-  shoot.setAttribute("aria-label", state === "placement" ? "确认白球位置" : "按所选力度击球");
+  shoot.textContent = settings.language === "en" ? (online.placementSending && state === "placement" ? "Confirming…" : state === "placement" ? "Confirm" : state === "decision" ? "Waiting" : state === "roll" ? "Rolling" : state === "over" ? "Finished" : "Shoot") : (online.placementSending && state === "placement" ? "正在确认…" : state === "placement" ? "确认位置" : state === "decision" ? "等待选择" : state === "roll" ? "球在滚动" : state === "over" ? "本局结束" : "击球");
+  shoot.setAttribute("aria-label", settings.language === "en" ? (state === "placement" ? "Confirm cue ball position" : "Shoot with selected power") : (state === "placement" ? "确认白球位置" : "按所选力度击球"));
   document.getElementById("touchPower").disabled = state !== "aim" || modalOpen || !onlineCanAct();
   document.body.classList.toggle("placement-active", state === "placement");
 }
@@ -591,17 +835,20 @@ function reset(opener = 0) {
   shots = 0; shotPots = []; shotPotEvents = []; shotFacts = null;
   cuePotted = false; power = coarsePointer ? mobilePower : 0; charging = false;
   state = "aim"; effects = []; toast = null; placement = null; matchWinner = null; kitchenRestriction = false;
+  matchStartedAt = Date.now(); lastTurnKey = "";
+  matchStats = [{ shots: 0, pots: 0, fouls: 0, streak: 0, maxStreak: 0 }, { shots: 0, pots: 0, fouls: 0, streak: 0, maxStreak: 0 }];
   document.getElementById("overlay").classList.remove("show");
   document.getElementById("decisionModal").classList.remove("show");
   setMobilePower(45, coarsePointer);
   refreshHud();
 }
 
-function groupName(group) { return group === "solid" ? "全色球" : group === "stripe" ? "花色球" : "开放球台"; }
+function groupName(group) { return settings.language === "en" ? (group === "solid" ? "Solids" : group === "stripe" ? "Stripes" : "Open table") : (group === "solid" ? "全色球" : group === "stripe" ? "花色球" : "开放球台"); }
 function poolGroup(b) { return b.n >= 1 && b.n <= 7 ? "solid" : b.n >= 9 && b.n <= 15 ? "stripe" : b.n === 8 ? "eight" : null; }
 function redsLeft() { return balls.filter(b => b.kind === "red" && !b.potted).length; }
 function poolGroupLeft(group) { return balls.some(b => !b.potted && poolGroup(b) === group); }
 function snookerTargetText() {
+  if (settings.language === "en") return snookerTarget === "red" ? "Target: red" : snookerTarget === "color" ? "Target: any color" : `Target: ${snookerTarget}`;
   if (snookerTarget === "red") return "目标：红球";
   if (snookerTarget === "color") return "目标：任一彩球";
   return "目标：" + SNOOKER_COLORS[snookerTarget].label;
@@ -610,15 +857,20 @@ function snookerTargetText() {
 function refreshHud() {
   for (let i = 0; i < 2; i++) {
     const playerName = online.room?.players?.[onlineRole(i)]?.nickname || `Player ${i + 1}`;
-    const me = onlineRoleIndex() === i ? "（你）" : "";
+    const me = onlineRoleIndex() === i ? (settings.language === "en" ? " (You)" : "（你）") : "";
     document.querySelector(`#player${i} strong`).textContent = playerName + me;
     document.getElementById("player" + i).classList.toggle("active", turn === i && state !== "over");
+    const left = players[i].group ? balls.filter(b => !b.potted && poolGroup(b) === players[i].group).length : 0;
     document.getElementById("player" + i + "Status").textContent = mode === "eight"
-      ? `${players[i].group ? `${groupName(players[i].group)} · 剩 ${balls.filter(b => !b.potted && poolGroup(b) === players[i].group).length} 球` : "开放球台"}${players[i].fouls === 2 ? " · 犯规警告 2/3" : ""}`
-      : `${players[i].score} 分`;
+      ? `${players[i].group ? (settings.language === "en" ? `${groupName(players[i].group)} · ${left} left` : `${groupName(players[i].group)} · 剩 ${left} 球`) : groupName(null)}${players[i].fouls === 2 ? (settings.language === "en" ? " · Foul warning 2/3" : " · 犯规警告 2/3") : ""}`
+      : settings.language === "en" ? `${players[i].score} points` : `${players[i].score} 分`;
   }
-  const placementStatus = state === "placement" && online.room ? ` · ${online.placementNotice || (!onlineCanPlace() ? placementBlockReason() : "位置有效，可以确认")}` : "";
-  const gameInfo = state === "placement"
+  const placementStatus = state === "placement" && online.room ? ` · ${online.placementNotice || (!onlineCanPlace() ? placementBlockReason() : (settings.language === "en" ? "Position is valid" : "位置有效，可以确认"))}` : "";
+  const gameInfo = settings.language === "en" ? (state === "placement"
+    ? `Player ${turn + 1} · ${placement.scope === "kitchen" ? "Ball in hand behind the line" : "Ball in hand"}: ${coarsePointer ? "drag the cue ball, then confirm" : "move the cue ball and double-click to confirm"}${placementStatus}`
+    : state === "decision" ? `Player ${turn + 1} · Waiting for a decision`
+    : mode === "eight" ? (isBreak ? `Player ${turn + 1} breaks · pot a ball or drive 4 balls to rails` : players[turn].group && !poolGroupLeft(players[turn].group) ? "Target: 8-ball" : `Target: ${groupName(players[turn].group)}`)
+    : `${snookerTargetText()} · ${redsLeft()} reds`) : state === "placement"
     ? `Player ${turn + 1} · ${placement.scope === "kitchen" ? "线后自由球" : "全台自由球"}：${coarsePointer ? "拖动白球，点击下方确认" : "移动白球，双击球桌确认位置"}${placementStatus}`
     : state === "decision" ? `Player ${turn + 1} · 等待确认`
     : mode === "eight"
@@ -626,8 +878,21 @@ function refreshHud() {
       : `${snookerTargetText()} · 红球 ${redsLeft()}`;
   const deadline = online.reconnectUntil || online.pauseUntil, pauseSeconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
   const disconnected = online.room && online.room.status === "PLAYING" && online.ws?.readyState !== WebSocket.OPEN;
-  const onlineInfo = online.room ? `${online.room.match_code} · ${disconnected ? `重连中（${pauseSeconds} 秒）` : online.room.status === "PLAYING" ? "在线" : online.room.status === "PAUSED" ? `暂停，等待重连（${pauseSeconds} 秒）` : online.room.status === "WAITING" ? "等待加入" : "已结束"}` : "";
+  const onlineInfo = online.room ? `${online.room.match_code} · ${settings.language === "en" ? (disconnected ? `Reconnecting (${pauseSeconds}s)` : online.room.status === "PLAYING" ? "Online" : online.room.status === "PAUSED" ? `Paused (${pauseSeconds}s)` : online.room.status === "WAITING" ? "Waiting" : "Finished") : (disconnected ? `重连中（${pauseSeconds} 秒）` : online.room.status === "PLAYING" ? "在线" : online.room.status === "PAUSED" ? `暂停，等待重连（${pauseSeconds} 秒）` : online.room.status === "WAITING" ? "等待加入" : "已结束")}` : "";
   document.getElementById("matchInfoText").textContent = onlineInfo ? `${onlineInfo} · ${gameInfo}` : gameInfo;
+  const shell = document.getElementById("gameShell");
+  shell.dataset.gameState = state;
+  shell.dataset.turn = String(turn);
+  shell.dataset.roomStatus = online.room?.status || "LOCAL";
+  shell.dataset.stateVersion = String(online.room?.state_version || 0);
+  shell.dataset.rackId = online.room?.rack_id || "local";
+  const activeName = online.room?.players?.[onlineRole(turn)]?.nickname || `Player ${turn + 1}`;
+  const turnKey = `${online.room?.rack_id || "local"}:${turn}:${state}`;
+  if (gameActive && state === "aim" && turnKey !== lastTurnKey) {
+    lastTurnKey = turnKey;
+    const mine = !online.room || onlineRoleIndex() === turn;
+    showTurnBanner(mine && online.room ? t("yourTurn") : t("playerTurn", activeName));
+  }
   const tray = document.getElementById("tray");
   tray.innerHTML = "";
   balls.forEach(b => {
@@ -643,7 +908,32 @@ function refreshHud() {
   });
   document.getElementById("stalemateBtn").disabled = mode !== "eight" || state === "roll" || state === "over" || state === "decision";
   document.getElementById("leaveLocalBtn").hidden = Boolean(online.room);
+  renderNetworkState();
   syncMobileControls();
+}
+
+function showTurnBanner(text) {
+  const banner = document.getElementById("turnBanner");
+  banner.textContent = text; banner.classList.add("show");
+  clearTimeout(showTurnBanner.timer); showTurnBanner.timer = setTimeout(() => banner.classList.remove("show"), 1100);
+}
+
+function renderNetworkState() {
+  const overlay = document.getElementById("networkOverlay");
+  let networkState = "normal", title = "", detail = "";
+  if (online.room) {
+    const selfConnected = online.ws?.readyState === WebSocket.OPEN;
+    const peerRole = online.room.me.role === "PLAYER_1" ? "PLAYER_2" : "PLAYER_1";
+    const seconds = Math.max(0, Math.ceil(((online.reconnectUntil || online.pauseUntil) - Date.now()) / 1000));
+    if (!selfConnected) { networkState = "self"; title = t("reconnecting"); detail = t("reconnectDetail"); }
+    else if (online.room.status === "PAUSED" && !online.room.players[peerRole]?.present) { networkState = "peer"; title = t("peerOffline"); detail = t("peerDetail", seconds); }
+  }
+  overlay.classList.toggle("show", networkState !== "normal");
+  document.getElementById("networkTitle").textContent = title;
+  document.getElementById("networkDetail").textContent = detail;
+  if (lastNetworkState !== "normal" && networkState === "normal" && online.room) { showToast(t("restored")); trackEvent("reconnect"); }
+  if (lastNetworkState === "normal" && networkState !== "normal") trackEvent("disconnect", { kind: networkState });
+  lastNetworkState = networkState;
 }
 
 function showToast(text) {
@@ -654,6 +944,149 @@ function showToast(text) {
   el.textContent = text;
   el.classList.add("show");
   domToastTimer = setTimeout(() => el.classList.remove("show"), 3200);
+}
+
+function initials(value) {
+  const clean = String(value || "P1").trim();
+  return [...clean].slice(0, 2).join("").toUpperCase();
+}
+
+function setHomeError(message = "") { document.getElementById("homeError").textContent = message; }
+
+function applyI18n() {
+  document.documentElement.lang = settings.language;
+  document.getElementById("homeTitle").textContent = t("homeTitle");
+  document.getElementById("homeIntro").textContent = t("homeIntro");
+  document.getElementById("homePanelTitle").textContent = homeMode === "invite-link" ? t("invitedTitle") : t("ready");
+  document.getElementById("homePanelCopy").textContent = homeMode === "invite-link" ? t("inviteLoading") : t("chooseStart");
+  document.getElementById("proofNoLogin").textContent = t("noLogin");
+  document.getElementById("modeSel").options[0].textContent = settings.language === "en" ? "Chinese 8-ball" : "中式八球";
+  document.getElementById("modeSel").options[1].textContent = settings.language === "en" ? "Snooker" : "斯诺克";
+  document.getElementById("homeMode").options[0].textContent = settings.language === "en" ? "Chinese 8-ball" : "中式八球";
+  document.getElementById("homeMode").options[1].textContent = settings.language === "en" ? "Snooker" : "斯诺克";
+  const labels = [["quickStartBtn","quick","quickSub"],["inviteFriendBtn","invite","inviteSub"],["joinRoomBtn","join","joinSub"]];
+  labels.forEach(([id, main, sub]) => { const button = document.getElementById(id); button.querySelector("b").textContent = t(main); button.querySelector("small").textContent = t(sub); });
+  document.getElementById("homeNameLabel").firstChild.textContent = t("nickname");
+  document.getElementById("homeInviteLabel").firstChild.textContent = t("inviteValue");
+  document.getElementById("homeModeLabel").firstChild.textContent = t("mode");
+  document.getElementById("homeBackBtn").textContent = t("back");
+  document.getElementById("settingsBtn").textContent = t("settings");
+  document.getElementById("settingsTitle").textContent = t("settings");
+  document.getElementById("soundSettingLabel").textContent = t("sound");
+  document.getElementById("aimSettingLabel").textContent = t("aim");
+  document.getElementById("hapticSettingLabel").textContent = t("haptic");
+  document.getElementById("languageSettingLabel").textContent = t("language");
+  document.getElementById("settingsRulesBtn").textContent = t("rules");
+  document.getElementById("settingsExitBtn").textContent = t("exit");
+  document.getElementById("moreBtn").textContent = settings.language === "en" ? "More" : "更多";
+  document.getElementById("rulesBtn").textContent = settings.language === "en" ? "Rules" : "规则";
+  if (!online.room) document.getElementById("onlineBtn").textContent = settings.language === "en" ? "Online match" : "在线对局";
+  document.getElementById("stalemateBtn").textContent = settings.language === "en" ? "Stalemate" : "僵局重摆";
+  document.getElementById("restart").textContent = settings.language === "en" ? "Restart" : "重 新 开 局";
+  document.getElementById("leaveLocalBtn").textContent = settings.language === "en" ? "Leave local game" : "退出本地双人";
+  document.getElementById("confirmPlacementBtn").textContent = settings.language === "en" ? "Confirm" : "确认摆放";
+  document.getElementById("restorePlacementBtn").textContent = settings.language === "en" ? "Restore" : "恢复位置";
+  document.querySelectorAll(".player").forEach(player => player.dataset.currentLabel = settings.language === "en" ? "TURN" : "当前");
+  document.getElementById("placementTitle").textContent = t("ballInHand");
+  document.getElementById("again").textContent = t("rematch");
+  document.getElementById("newInviteBtn").textContent = settings.language === "en" ? "Invite a new friend" : "邀请新好友";
+  document.getElementById("shareResultBtn").textContent = t("shareResult");
+  document.getElementById("resultHomeBtn").textContent = t("resultHome");
+}
+
+function showHome(mode = "menu", preview = null) {
+  gameActive = false; homeMode = mode;
+  document.body.classList.remove("game-active"); document.body.classList.add("home-active");
+  const home = document.getElementById("homeView"), actions = document.getElementById("homeActions"), form = document.getElementById("homeForm");
+  home.hidden = false; actions.hidden = mode !== "menu"; form.hidden = mode === "menu";
+  document.getElementById("homeNickname").value = nickname();
+  document.getElementById("homeInviteLabel").hidden = !["join"].includes(mode);
+  document.getElementById("homeModeLabel").hidden = mode === "join" || mode === "invite-link";
+  document.getElementById("inviteSummary").hidden = mode !== "invite-link";
+  document.getElementById("homeSubmitBtn").textContent = mode === "create" ? t("create") : mode === "join" || mode === "invite-link" ? t("joinGame") : t("continue");
+  if (preview) {
+    document.getElementById("inviteHeadline").textContent = `${preview.inviter_nickname} · ${preview.mode === "snooker" ? "斯诺克" : "中式八球"}`;
+    document.getElementById("inviteMeta").textContent = settings.language === "en" ? "Your table is ready" : "球桌已经准备好，只差你入场";
+    document.getElementById("inviteAvatar").textContent = initials(preview.inviter_nickname);
+    document.getElementById("homePanelCopy").textContent = settings.language === "en" ? "Choose a nickname and join directly." : "确认昵称即可加入，无需再次输入邀请码。";
+  }
+  setHomeError(); applyI18n();
+  if (preview) {
+    document.getElementById("homePanelCopy").textContent = settings.language === "en" ? "Choose a nickname and join directly." : "确认昵称即可加入，无需再次输入邀请码。";
+  }
+  updateDialogLock(); syncMobileControls();
+  setTimeout(() => (mode === "menu" ? document.getElementById("quickStartBtn") : document.getElementById("homeNickname")).focus(), 0);
+  trackEvent("home_view", { mode });
+}
+
+function enterGame({ local = false } = {}) {
+  gameActive = true; document.body.classList.add("game-active"); document.body.classList.remove("home-active"); document.getElementById("homeView").hidden = true; updateDialogLock(); syncMobileControls();
+  if (local) { document.getElementById("modeSel").value = document.getElementById("homeMode").value || "eight"; reset(0); trackEvent("local_game_start", { mode }); }
+  maybeShowOnboarding();
+}
+
+function parseInviteInput(value) {
+  const raw = String(value || "").trim();
+  if (/^[A-Za-z0-9]{8}$/.test(raw)) return { invite_code: raw.toUpperCase() };
+  try {
+    const url = new URL(raw, location.href); const token = url.searchParams.get("invite");
+    if (token) return { invite_token: token };
+  } catch (e) {}
+  return null;
+}
+
+async function previewInvite(token) {
+  const response = await fetch(`/api/invites/${encodeURIComponent(token)}`);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error?.message || t("unavailable"));
+  return data.invite;
+}
+
+async function loadInviteLanding(token) {
+  pendingInviteToken = token; showHome("invite-link");
+  document.getElementById("homeSubmitBtn").disabled = true;
+  try { const preview = await previewInvite(token); showHome("invite-link", preview); }
+  catch (e) { showHome("join"); document.getElementById("homeInviteValue").value = location.href; setHomeError(userFacingError(e)); }
+  finally { document.getElementById("homeSubmitBtn").disabled = false; }
+}
+
+function userFacingError(error) {
+  const message = String(error?.message || "");
+  const known = {
+    "Invite was not found": settings.language === "en" ? "This invite does not exist." : "没有找到这个邀请，请检查链接。",
+    "Invite has expired": settings.language === "en" ? "This invite has expired." : "邀请已过期，请让好友重新创建。",
+    "Room already has two players": settings.language === "en" ? "This room is already full." : "房间已满，两位玩家已经入场。",
+    "The inviter cannot join as Player 2": settings.language === "en" ? "Open the waiting room on this device." : "这是你创建的房间，请回到等待房。"
+  };
+  return known[message] || (message.includes("fetch") ? t("unavailable") : message || t("unavailable"));
+}
+
+function onlineErrorMessage(error = {}) {
+  const messages = settings.language === "en" ? {
+    NOT_YOUR_TURN: "Wait for your turn.", PEER_OFFLINE: "Your opponent is reconnecting.", SHOT_PENDING: "The previous shot is still settling.", REQUEST_PENDING: "Another request is awaiting a response.", RATE_LIMITED: "Please wait a moment and try again."
+  } : {
+    NOT_YOUR_TURN: "还没轮到你，请等待对方击球。", PEER_OFFLINE: "对方正在重连，比赛已暂停。", SHOT_PENDING: "上一杆仍在结算，请稍候。", REQUEST_PENDING: "已有一个请求等待确认。", RATE_LIMITED: "操作太频繁，请稍后再试。"
+  };
+  return messages[error.code] || userFacingError(new Error(error.message));
+}
+
+function maybeShowOnboarding() {
+  let seen = false; try { seen = localStorage.getItem("billiards_onboarding") === "done"; } catch (e) {}
+  if (seen) return;
+  onboardingStep = 0; renderOnboarding(); document.getElementById("onboarding").hidden = false;
+}
+
+function renderOnboarding() {
+  const titles = [settings.language === "en" ? "1 of 3 · Aim" : "1 / 3 · 瞄准", settings.language === "en" ? "2 of 3 · Power" : "2 / 3 · 力度", settings.language === "en" ? "3 of 3 · Shoot" : "3 / 3 · 击球"];
+  document.getElementById("onboardingTitle").textContent = titles[onboardingStep];
+  document.getElementById("onboardingText").textContent = t(`onboarding${onboardingStep + 1}`);
+  document.getElementById("onboardingNext").textContent = onboardingStep === 2 ? t("gotIt") : t("next");
+}
+
+function advanceOnboarding() {
+  if (onboardingStep < 2) { onboardingStep++; renderOnboarding(); return; }
+  document.getElementById("onboarding").hidden = true;
+  try { localStorage.setItem("billiards_onboarding", "done"); } catch (e) {}
 }
 
 /* ---------- online play ---------- */
@@ -670,7 +1103,7 @@ function saveNickname(value) {
 async function api(path, options = {}) {
   const response = await fetch(path, { method: options.method || "GET", headers: options.body ? { "Content-Type": "application/json" } : {}, body: options.body ? JSON.stringify(options.body) : undefined });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error?.message || "在线服务暂不可用");
+  if (!response.ok) throw new Error(data.error?.message || t("unavailable"));
   return data;
 }
 function inviteLink() { return `${location.origin}${location.pathname}?invite=${encodeURIComponent(online.room.invite.token)}`; }
@@ -684,6 +1117,7 @@ function setOnlineRoom(room) {
   if (room && ["CANCELLED", "EXPIRED"].includes(room.status)) { returnToLocal(terminalRoomMessage(room)); return; }
   const wasPaused = online.room?.status === "PAUSED";
   online.room = room;
+  if (room && room.status !== "WAITING") { gameActive = true; document.getElementById("homeView").hidden = true; }
   if (room?.status === "PAUSED" && !wasPaused) online.pauseUntil = Date.now() + 90_000;
   else if (room?.status !== "PAUSED") online.pauseUntil = 0;
   document.getElementById("onlineBtn").classList.toggle("active", Boolean(room));
@@ -711,7 +1145,7 @@ function returnToLocal(message = "已返回本地双人模式") {
   for (const pending of online.pending.values()) pending.reject(new Error("在线房间已关闭"));
   online.pending.clear(); online.room = null; online.rackId = null; online.appliedSnapshot = ""; online.appliedEvents.clear(); online.inputLocked = false; online.placementSending = false; online.placementNotice = ""; online.leaveSubmitting = false; online.authorityShotId = null; online.queuedSnapshot = null; online.snapshotSending = false; online.decisionId = null;
   document.getElementById("modeSel").disabled = false; document.getElementById("onlineBtn").classList.remove("active"); document.getElementById("onlineBtn").textContent = "在线对局"; document.getElementById("onlineMiniBtn").classList.remove("show");
-  hideDecision(); reset(0); renderOnlineLobby(); onlineMessage(message); showToast(message);
+  hideDecision(); reset(0); renderOnlineLobby(); onlineMessage(message); showToast(message); showHome("menu");
 }
 function terminalRoomMessage(room) {
   if (room.reason === "INVITE_EXPIRED") return "邀请已过期，已返回本地双人模式";
@@ -724,42 +1158,63 @@ function renderOnlineLobby() {
   const root = document.getElementById("onlineContent");
   root.replaceChildren();
   if (!online.room) {
+    document.getElementById("onlineTitle").textContent = settings.language === "en" ? "Online match" : "在线对局";
+    document.getElementById("onlineSubtitle").textContent = settings.language === "en" ? "Create a room or join with an 8-character code." : "创建好友房，或输入 8 位邀请码加入。";
     const form = document.createElement("div"); form.className = "online-form";
-    const nameLabel = document.createElement("label"); nameLabel.textContent = "昵称";
+    const nameLabel = document.createElement("label"); nameLabel.textContent = t("nickname");
     const nameInput = document.createElement("input"); nameInput.id = "onlineNickname"; nameInput.maxLength = 32; nameInput.value = nickname(); nameInput.autocomplete = "nickname"; nameLabel.appendChild(nameInput);
-    const codeLabel = document.createElement("label"); codeLabel.textContent = "8 位邀请码";
-    const codeInput = document.createElement("input"); codeInput.id = "joinCode"; codeInput.maxLength = 8; codeInput.placeholder = "例如 ABCD2345"; codeInput.autocapitalize = "characters"; codeLabel.appendChild(codeInput);
+    const codeLabel = document.createElement("label"); codeLabel.textContent = settings.language === "en" ? "8-character invite code" : "8 位邀请码";
+    const codeInput = document.createElement("input"); codeInput.id = "joinCode"; codeInput.maxLength = 8; codeInput.placeholder = settings.language === "en" ? "e.g. ABCD2345" : "例如 ABCD2345"; codeInput.autocapitalize = "characters"; codeLabel.appendChild(codeInput);
     const actions = document.createElement("div"); actions.className = "online-actions";
-    const create = document.createElement("button"); create.className = "online-primary"; create.textContent = "创建当前模式房间";
-    const join = document.createElement("button"); join.textContent = "加入房间";
-    create.onclick = () => createOnline(nameInput.value); join.onclick = () => joinOnline({ invite_code: codeInput.value }, nameInput.value);
+    const create = document.createElement("button"); create.className = "online-primary"; create.textContent = settings.language === "en" ? "Create room" : "创建当前模式房间";
+    const join = document.createElement("button"); join.textContent = t("joinGame");
+    create.onclick = () => createOnline(nameInput.value).catch(e => onlineMessage(userFacingError(e))); join.onclick = () => joinOnline({ invite_code: codeInput.value }, nameInput.value).catch(e => onlineMessage(userFacingError(e)));
     actions.append(create, join); form.append(nameLabel, codeLabel, actions); root.appendChild(form); return;
   }
   const room = online.room;
   if (room.status === "WAITING") {
+    document.getElementById("onlineTitle").textContent = settings.language === "en" ? "Waiting room" : "好友等待房";
+    document.getElementById("onlineSubtitle").textContent = settings.language === "en" ? "Share the link or QR code. The match starts when your friend joins." : "分享链接或二维码，好友加入后比赛自动开始。";
+    const meta = document.createElement("div"); meta.className = "lobby-meta"; meta.innerHTML = `<span>${room.mode === "snooker" ? "斯诺克" : "中式八球"}</span><span>${settings.language === "en" ? "Private room" : "好友私密房"}</span>`;
+    const vs = document.createElement("div"); vs.className = "lobby-vs";
+    const host = room.players.PLAYER_1?.nickname || "Player 1";
+    vs.innerHTML = `<div class="lobby-seat"><div class="avatar">${initials(host)}</div><b></b><span>${t("readyStatus")}</span></div><b>VS</b><div class="lobby-seat waiting"><div class="avatar">?</div><b>${t("waitingStatus")}</b><span>${t("waitingFriend")}</span></div>`;
+    vs.querySelector(".lobby-seat b").textContent = host;
+    const tools = document.createElement("div"); tools.className = "invite-tools";
+    const qr = document.createElement("div"); qr.className = "invite-qr"; const image = document.createElement("img"); image.alt = settings.language === "en" ? "Invite QR code" : "邀请链接二维码"; image.src = `/api/invites/${encodeURIComponent(room.invite.token)}/qr.svg`; qr.appendChild(image);
+    const details = document.createElement("div"); details.className = "invite-details";
     const code = document.createElement("div"); code.className = "online-code"; code.textContent = room.invite.code;
-    const actions = document.createElement("div"); actions.className = "online-actions";
-    [["复制邀请链接", copyInvite], ["系统分享", shareInvite], ["重新生成", regenerateInvite], ["取消房间", cancelWaitingRoom]].forEach(([label, fn], i) => { const b = document.createElement("button"); b.textContent = label; if (i === 0) b.className = "online-primary"; if (label === "系统分享" && !navigator.share) b.hidden = true; b.onclick = fn; actions.appendChild(b); });
-    root.append(code, actions); return;
+    const link = document.createElement("div"); link.className = "invite-link-display"; link.textContent = inviteLink(); link.title = inviteLink();
+    details.append(code, link); tools.append(qr, details);
+    const shares = document.createElement("div"); shares.className = "share-grid";
+    [[t("copyLink"), copyInvite, true], [t("copyCode"), copyInviteCode], [t("systemShare"), shareInvite], [t("whatsapp"), () => shareChannel("whatsapp")], [t("telegram"), () => shareChannel("telegram")]].forEach(([label, fn, primary]) => { const b = document.createElement("button"); b.className = primary ? "online-primary" : ""; b.textContent = label; if (label === t("systemShare") && !navigator.share) b.hidden = true; b.onclick = () => runButtonAction(b, fn); shares.appendChild(b); });
+    const wait = document.createElement("div"); wait.className = "waiting-line"; wait.textContent = t("waitingFriend");
+    const cancel = document.createElement("button"); cancel.className = "online-danger"; cancel.textContent = t("cancelRoom"); cancel.onclick = () => runButtonAction(cancel, cancelWaitingRoom);
+    root.append(meta, vs, tools, shares, wait, cancel); return;
   }
+  document.getElementById("onlineTitle").textContent = settings.language === "en" ? "Match details" : "在线比赛";
+  document.getElementById("onlineSubtitle").textContent = settings.language === "en" ? "Player and connection status" : "玩家与连接状态";
   const roster = document.createElement("div"); roster.className = "online-roster";
-  ["PLAYER_1", "PLAYER_2"].forEach((role, i) => { const row = document.createElement("div"); row.className = "online-person"; const name = document.createElement("b"); name.textContent = `Player ${i + 1} · ${room.players[role]?.nickname || "等待中"}`; const status = document.createElement("span"); status.textContent = `${room.players[role]?.present ? "已连接" : "离线"}${room.me.role === role ? " · 你" : ""}`; if (room.me.role === role) status.className = "you"; row.append(name, status); roster.appendChild(row); });
-  const close = document.createElement("button"); close.className = "online-primary"; close.style.width = "100%"; close.textContent = "返回球桌"; close.onclick = closeOnlineModal;
-  const leave = document.createElement("button"); leave.className = "online-danger"; leave.textContent = "退出在线对局"; leave.onclick = leaveOnlineRoom;
+  ["PLAYER_1", "PLAYER_2"].forEach((role, i) => { const row = document.createElement("div"); row.className = "online-person"; const name = document.createElement("b"); name.textContent = `Player ${i + 1} · ${room.players[role]?.nickname || (settings.language === "en" ? "Waiting" : "等待中")}`; const status = document.createElement("span"); status.textContent = `${room.players[role]?.present ? (settings.language === "en" ? "Connected" : "已连接") : (settings.language === "en" ? "Offline" : "离线")}${room.me.role === role ? (settings.language === "en" ? " · You" : " · 你") : ""}`; if (room.me.role === role) status.className = "you"; row.append(name, status); roster.appendChild(row); });
+  const close = document.createElement("button"); close.className = "online-primary"; close.style.width = "100%"; close.textContent = settings.language === "en" ? "Back to table" : "返回球桌"; close.onclick = closeOnlineModal;
+  const leave = document.createElement("button"); leave.className = "online-danger"; leave.textContent = settings.language === "en" ? "Leave online match" : "退出在线对局"; leave.onclick = leaveOnlineRoom;
   root.append(roster, close, leave);
 }
 function openOnlineModal() { dialogReturnFocus = document.activeElement; renderOnlineLobby(); document.getElementById("onlineModal").classList.add("show"); updateDialogLock(); document.getElementById("closeOnline").focus(); }
 function closeOnlineModal() { document.getElementById("onlineModal").classList.remove("show"); updateDialogLock(); syncMobileControls(); setTimeout(restoreDialogFocus, 0); }
 async function createOnline(rawName) {
-  try { onlineMessage("正在创建…"); const data = await api("/api/rooms", { method: "POST", body: { nickname: saveNickname(rawName), mode } }); setOnlineRoom(data.room); connectOnline(); }
-  catch (e) { onlineMessage(e.message + "，本地模式不受影响"); }
+  try { onlineMessage(settings.language === "en" ? "Creating room…" : "正在创建房间…"); const data = await api("/api/rooms", { method: "POST", body: { nickname: saveNickname(rawName), mode } }); setOnlineRoom(data.room); connectOnline(); trackEvent("online_room_create", { mode }); return data.room; }
+  catch (e) { const message = userFacingError(e); onlineMessage(message); throw new Error(message); }
 }
 async function joinOnline(invite, rawName, automatic = false) {
-  try { onlineMessage("正在加入…"); const data = await api("/api/rooms/join", { method: "POST", body: { ...invite, nickname: saveNickname(rawName) } }); setOnlineRoom(data.room); removeInviteFromUrl(); connectOnline(); if (automatic) closeOnlineModal(); }
-  catch (e) { openOnlineModal(); onlineMessage(e.message + "，仍可继续本地双人游戏"); }
+  try { onlineMessage(settings.language === "en" ? "Joining match…" : "正在加入比赛…"); const data = await api("/api/rooms/join", { method: "POST", body: { ...invite, nickname: saveNickname(rawName) } }); setOnlineRoom(data.room); removeInviteFromUrl(); connectOnline(); enterGame(); if (automatic) closeOnlineModal(); trackEvent("room_join", { mode: data.room.mode }); return data.room; }
+  catch (e) { const message = userFacingError(e); onlineMessage(message); throw new Error(message); }
 }
-async function copyInvite() { try { await navigator.clipboard.writeText(inviteLink()); onlineMessage("邀请链接已复制"); } catch (e) { onlineMessage("浏览器未允许复制，请使用系统分享"); } }
-async function shareInvite() { try { await navigator.share({ title: "翡翠球房在线对局", text: `邀请码 ${online.room.invite.code}`, url: inviteLink() }); } catch (e) { if (e.name !== "AbortError") onlineMessage("分享未完成"); } }
+async function runButtonAction(button, action) { if (button.disabled) return; button.disabled = true; try { await action(); } finally { button.disabled = false; } }
+async function copyInvite() { try { await navigator.clipboard.writeText(inviteLink()); onlineMessage(settings.language === "en" ? "Invite link copied" : "邀请链接已复制"); trackEvent("invite_copy", { kind: "link" }); } catch (e) { onlineMessage(settings.language === "en" ? "Copy was blocked. Use Share instead." : "浏览器未允许复制，请使用系统分享"); } }
+async function copyInviteCode() { try { await navigator.clipboard.writeText(online.room.invite.code); onlineMessage(settings.language === "en" ? "Invite code copied" : "邀请码已复制"); trackEvent("invite_copy", { kind: "code" }); } catch (e) { onlineMessage(settings.language === "en" ? "Select and copy the code above." : "请长按上方邀请码复制"); } }
+async function shareInvite() { try { await navigator.share({ title: t("homeTitle"), text: `${settings.language === "en" ? "Invite code" : "邀请码"} ${online.room.invite.code}`, url: inviteLink() }); trackEvent("invite_share", { channel: "system" }); } catch (e) { if (e.name !== "AbortError") onlineMessage(settings.language === "en" ? "Share did not complete" : "分享未完成"); } }
+function shareChannel(channel) { const url = encodeURIComponent(inviteLink()), text = encodeURIComponent(settings.language === "en" ? `Join my billiards match · ${online.room.invite.code}` : `来和我打台球 · 邀请码 ${online.room.invite.code}`); const target = channel === "whatsapp" ? `https://wa.me/?text=${text}%20${url}` : `https://t.me/share/url?url=${url}&text=${text}`; window.open(target, "_blank", "noopener,noreferrer"); trackEvent("invite_share", { channel }); }
 async function regenerateInvite() { try { const data = await api(`/api/rooms/${online.room.room_id}/invite`, { method: "POST" }); setOnlineRoom(data.room); onlineMessage("旧链接已失效，已生成新邀请"); } catch (e) { onlineMessage(e.message); } }
 async function cancelWaitingRoom() { try { await api(`/api/rooms/${online.room.room_id}/cancel`, { method: "POST" }); returnToLocal("邀请已取消，已返回本地双人模式"); } catch (e) { onlineMessage(e.message); } }
 function leaveOnlineRoom() {
@@ -805,13 +1260,13 @@ function actionId(prefix) { return `${prefix}-${crypto.randomUUID().replaceAll("
 function sendOnline(type, fields = {}) {
   if (!online.ws || online.ws.readyState !== WebSocket.OPEN) return Promise.reject(new Error("连接尚未就绪"));
   const id = actionId(type.toLowerCase());
-  return new Promise((resolve, reject) => { online.pending.set(id, { resolve, reject }); online.ws.send(JSON.stringify({ type, action_id: id, ...fields })); setTimeout(() => { const pending = online.pending.get(id); if (pending) { online.pending.delete(id); pending.reject(new Error("服务器响应超时")); } }, 8000); });
+  return new Promise((resolve, reject) => { online.pending.set(id, { resolve, reject }); online.ws.send(JSON.stringify({ type, action_id: id, ...fields })); setTimeout(() => { const pending = online.pending.get(id); if (pending) { online.pending.delete(id); pending.reject(new Error(settings.language === "en" ? "The network is slow. Please try again." : "网络响应较慢，请重试。")); } }, 8000); });
 }
 function handleOnlineMessage(message) {
   if (message.type === "CONNECTED" || message.type === "ROOM_STATE") setOnlineRoom(message.room);
   else if (message.type === "PRESENCE") renderOnlineLobby();
   else if (message.type === "ACK") { const pending = online.pending.get(message.action_id); if (pending) { online.pending.delete(message.action_id); pending.resolve(message); } }
-  else if (message.type === "ERROR") { const pending = message.action_id ? online.pending.get(message.action_id) : online.pending.values().next().value; if (message.action_id) online.pending.delete(message.action_id); if (pending) pending.reject(new Error(message.error.message)); showToast(message.error.message); }
+  else if (message.type === "ERROR") { const pending = message.action_id ? online.pending.get(message.action_id) : online.pending.values().next().value; if (message.action_id) online.pending.delete(message.action_id); const safeMessage = onlineErrorMessage(message.error); if (pending) pending.reject(new Error(safeMessage)); showToast(safeMessage); console.warn("Online action rejected", message.error?.code); }
   else if (message.type === "PEER_EVENT") handlePeerEvent(message.event);
 }
 function handlePeerEvent(event) {
@@ -886,10 +1341,12 @@ function applySnapshot(s) {
     if (!s.players.every(p => Number.isInteger(p.score) && p.score >= 0 && p.score <= 1000 && Number.isInteger(p.fouls) && p.fouls >= 0 && p.fouls <= 3 && [null,"solid","stripe"].includes(p.group)) || (s.mode === "snooker" && s.players.some(p => p.group !== null))) throw new Error();
     if (s.placement && (!Number.isFinite(s.placement.x) || s.placement.x < 30 || s.placement.x > 1070 || !Number.isFinite(s.placement.y) || s.placement.y < 30 || s.placement.y > 610 || !["table","kitchen"].includes(s.placement.scope))) throw new Error();
     if ((s.game_state === "placement") !== Boolean(s.placement) || !["red","color",...CLEARANCE].includes(s.snooker_target) || !Number.isInteger(s.clearance_index) || s.clearance_index < -1 || s.clearance_index >= CLEARANCE.length || (s.game_state === "over") !== (s.match_status === "FINISHED") || (s.game_state !== "over" && s.winner !== null) || s.rack_breaker !== onlineRoleIndex(online.room?.rack_breaker)) throw new Error();
+    const previousStartedAt = matchStartedAt, previousStats = matchStats;
     document.getElementById("modeSel").value = s.mode; reset(s.rack_breaker);
+    matchStartedAt = previousStartedAt; matchStats = previousStats;
     for (const saved of s.balls) { const b = balls.find(item => item.n === saved.n); b.x = saved.x; b.y = saved.y; b.vx = b.vy = 0; b.potted = saved.potted; }
     cue = balls.find(b => b.n === 0); players = s.players.map(p => ({ ...p })); turn = s.turn; rackBreaker = s.rack_breaker; isBreak = Boolean(s.is_break); snookerTarget = typeof s.snooker_target === "string" ? s.snooker_target : "red"; clearanceIndex = Number.isInteger(s.clearance_index) ? s.clearance_index : -1; kitchenRestriction = Boolean(s.kitchen_restriction); shots = Number.isInteger(s.shots) ? s.shots : 0; matchWinner = [0,1,null].includes(s.winner) ? s.winner : null;
-    placement = s.placement ? { ...s.placement, valid: legalPlacement(s.placement.x, s.placement.y, s.placement.scope) } : null; state = s.game_state; if (state === "over") { document.querySelector("#overlay h2").textContent = matchWinner === null ? "平 局" : `PLAYER ${matchWinner + 1} 获胜`; document.getElementById("finalText").textContent = "在线赛果已恢复"; document.getElementById("overlay").classList.add("show"); } else document.getElementById("overlay").classList.remove("show");
+    placement = s.placement ? { ...s.placement, valid: legalPlacement(s.placement.x, s.placement.y, s.placement.scope) } : null; state = s.game_state; if (state === "over") { renderResult(matchWinner === null ? (settings.language === "en" ? "Draw" : "平局") : `PLAYER ${matchWinner + 1} ${settings.language === "en" ? "WINS" : "获胜"}`, settings.language === "en" ? "Online result restored" : "在线赛果已恢复", matchWinner); document.getElementById("overlay").classList.add("show"); } else document.getElementById("overlay").classList.remove("show");
     online.appliedSnapshot = signature; rememberAppliedEvent(s.shot_action_id); if (s.shot_action_id === online.authorityShotId) clearShotAuthority(); else online.inputLocked = false; refreshHud();
   } catch (e) { console.warn("Ignored malformed online snapshot"); }
 }
@@ -900,7 +1357,7 @@ async function requestBilateral(kind) {
   const decisionReady = online.ws?.readyState === WebSocket.OPEN && (kind === "REMATCH" ? online.room.status === "FINISHED" : ["PLAYING", "PAUSED"].includes(online.room.status)) && !online.room.pending_shot && !online.inputLocked;
   if (!decisionReady) { showToast("连接或房间状态尚未就绪"); return true; }
   decisionResumeState = state;
-  try { await sendOnline(`${kind}_REQUEST`, { payload: { opener: onlineRole(requestedOpener(kind)) } }); showToast("请求已发送，等待对方确认"); } catch (e) { showToast(e.message); }
+  try { await sendOnline(`${kind}_REQUEST`, { payload: { opener: onlineRole(requestedOpener(kind)) } }); showToast("请求已发送，等待对方确认"); if (kind === "REMATCH") trackEvent("rematch_request"); } catch (e) { showToast(userFacingError(e)); }
   return true;
 }
 function syncPendingDecision() {
@@ -908,16 +1365,17 @@ function syncPendingDecision() {
   if (!pending) { if (online.decisionId) { online.decisionId = null; hideDecision(); if (state === "decision") state = online.room?.status === "FINISHED" ? "over" : decisionResumeState; } return; }
   if (online.decisionId === pending.request_id) return; online.decisionId = pending.request_id; decisionResumeState = state;
   const names = { RESTART: "重新开局", STALEMATE: "僵局重摆", REMATCH: "再来一局" }, mine = pending.requested_by === online.room.me.role;
-  const send = async suffix => { try { await sendOnline(`${pending.kind}_${suffix}`, { request_id: pending.request_id }); } catch (e) { showToast(e.message); } };
+  const send = async suffix => { try { await sendOnline(`${pending.kind}_${suffix}`, { request_id: pending.request_id }); if (pending.kind === "REMATCH" && suffix === "ACCEPT") trackEvent("rematch_accept"); } catch (e) { showToast(userFacingError(e)); } };
   showDecision(mine ? `等待对方确认${names[pending.kind]}` : `对方请求${names[pending.kind]}`, `接受后由 Player ${onlineRoleIndex(pending.opener) + 1} 开球。`, mine ? [{ label: "取消请求", action: () => send("CANCEL") }] : [{ label: "接受", action: () => send("ACCEPT") }, { label: "拒绝", action: () => send("DECLINE") }]);
 }
 async function restoreOnlineSession() {
   const invite = new URL(location.href).searchParams.get("invite");
   try {
     const data = await api("/api/session");
-    if (data.room) { setOnlineRoom(data.room); connectOnline(); if (invite) removeInviteFromUrl(); return; }
-    if (invite) await joinOnline({ invite_token: invite }, nickname(), true);
-  } catch (e) { if (invite) { openOnlineModal(); onlineMessage("无法连接在线服务，仍可使用本地模式"); } }
+    if (data.room) { setOnlineRoom(data.room); connectOnline(); enterGame(); if (invite) removeInviteFromUrl(); return; }
+    if (invite) { await loadInviteLanding(invite); return; }
+    showHome("menu");
+  } catch (e) { if (invite) { showHome("join"); document.getElementById("homeInviteValue").value = location.href; setHomeError(t("unavailable")); } else showHome("menu"); }
 }
 
 /* ---------- audio ---------- */
@@ -1111,8 +1569,12 @@ function setupControls() {
     if (v >= 0) { startMusic(MUSIC[v]); showToast("♪ " + MUSIC[v].name); }
   });
   const mb = document.getElementById("muteBtn");
+  muted = !settings.sound;
+  mb.textContent = muted ? "音效：关" : "音效：开";
+  mb.classList.toggle("off", muted);
   mb.addEventListener("click", () => {
     muted = !muted;
+    settings.sound = !muted; saveSettings(); document.getElementById("soundSetting").checked = settings.sound;
     if (MG) MG.gain.value = muted ? 0 : 1;
     mb.textContent = muted ? "音效：关" : "音效：开";
     mb.classList.toggle("off", muted);
@@ -1186,6 +1648,50 @@ function setupControls() {
   document.getElementById("onlineMiniBtn").addEventListener("click", openOnlineModal);
   document.getElementById("closeOnline").addEventListener("click", closeOnlineModal);
   document.getElementById("onlineModal").addEventListener("click", e => { if (e.target.id === "onlineModal") closeOnlineModal(); });
+
+  const homeForm = document.getElementById("homeForm");
+  document.getElementById("quickStartBtn").addEventListener("click", () => { document.getElementById("homeMode").value = "eight"; enterGame({ local: true }); });
+  document.getElementById("inviteFriendBtn").addEventListener("click", () => showHome("create"));
+  document.getElementById("joinRoomBtn").addEventListener("click", () => showHome("join"));
+  document.getElementById("homeBackBtn").addEventListener("click", () => showHome("menu"));
+  homeForm.addEventListener("submit", async e => {
+    e.preventDefault(); setHomeError();
+    const submit = document.getElementById("homeSubmitBtn"); submit.disabled = true;
+    const original = submit.textContent; submit.textContent = settings.language === "en" ? "Working…" : "正在处理…";
+    try {
+      if (homeMode === "create") {
+        document.getElementById("modeSel").value = document.getElementById("homeMode").value;
+        mode = document.getElementById("homeMode").value;
+        await createOnline(document.getElementById("homeNickname").value); enterGame(); openOnlineModal();
+      } else {
+        const invite = homeMode === "invite-link" ? { invite_token: pendingInviteToken } : parseInviteInput(document.getElementById("homeInviteValue").value);
+        if (!invite) throw new Error(t("invalidInvite"));
+        await joinOnline(invite, document.getElementById("homeNickname").value, true);
+      }
+    } catch (error) { setHomeError(userFacingError(error)); }
+    finally { submit.disabled = false; submit.textContent = original; }
+  });
+
+  const settingsModal = document.getElementById("settingsModal");
+  const closeSettings = () => { settingsModal.classList.remove("show"); updateDialogLock(); syncMobileControls(); setTimeout(restoreDialogFocus, 0); };
+  const openSettings = () => { dialogReturnFocus = document.activeElement; document.getElementById("soundSetting").checked = settings.sound; document.getElementById("aimSetting").value = settings.aimAssist; document.getElementById("hapticSetting").checked = settings.haptics; document.getElementById("languageSetting").value = settings.language; settingsModal.classList.add("show"); closeMore(); updateDialogLock(); syncMobileControls(); document.getElementById("closeSettings").focus(); };
+  document.getElementById("settingsBtn").addEventListener("click", openSettings);
+  document.getElementById("closeSettings").addEventListener("click", closeSettings);
+  settingsModal.addEventListener("click", e => { if (e.target === settingsModal) closeSettings(); });
+  document.getElementById("soundSetting").addEventListener("change", e => { settings.sound = e.target.checked; muted = !settings.sound; if (MG) MG.gain.value = muted ? 0 : 1; mb.textContent = muted ? "音效：关" : "音效：开"; mb.classList.toggle("off", muted); saveSettings(); });
+  document.getElementById("aimSetting").addEventListener("change", e => { settings.aimAssist = e.target.value; saveSettings(); });
+  document.getElementById("hapticSetting").addEventListener("change", e => { settings.haptics = e.target.checked; saveSettings(); });
+  document.getElementById("languageSetting").addEventListener("change", e => { settings.language = e.target.value; saveSettings(); applyI18n(); renderOnlineLobby(); refreshHud(); });
+  document.getElementById("settingsRulesBtn").addEventListener("click", () => { closeSettings(); document.getElementById("rulesBtn").click(); });
+  document.getElementById("settingsExitBtn").addEventListener("click", () => { closeSettings(); if (online.room) leaveOnlineRoom(); else { decisionResumeState = state; showDecision(settings.language === "en" ? "Leave this game?" : "退出当前球局", settings.language === "en" ? "The current table and score will be cleared." : "当前局面和计分将被清除。", [{ label: settings.language === "en" ? "Leave game" : "确认退出", action: () => { hideDecision(); reset(0); showHome("menu"); } }, { label: t("back"), action: () => { hideDecision(); state = decisionResumeState; refreshHud(); } }]); } });
+
+  document.getElementById("onboardingNext").addEventListener("click", advanceOnboarding);
+  document.getElementById("confirmPlacementBtn").addEventListener("click", requestPlacement);
+  document.getElementById("restorePlacementBtn").addEventListener("click", () => { if (state === "placement" && placementOrigin) updatePlacement(placementOrigin); });
+  document.getElementById("shareResultBtn").addEventListener("click", shareResult);
+  document.getElementById("newInviteBtn").addEventListener("click", () => { document.getElementById("overlay").classList.remove("show"); if (online.room) { showToast(settings.language === "en" ? "Leave this room before inviting a new friend" : "请先退出当前房间，再邀请新好友"); openOnlineModal(); } else showHome("create"); });
+  document.getElementById("resultHomeBtn").addEventListener("click", () => { document.getElementById("overlay").classList.remove("show"); if (online.room) leaveOnlineRoom(); else showHome("menu"); });
+  applyI18n();
 }
 
 function setFocusClass(active) {
@@ -1218,8 +1724,15 @@ document.addEventListener("fullscreenchange", () => {
   if (!document.fullscreenElement && nativeFocusFullscreen) exitMobileFocus(true);
 });
 window.addEventListener("keydown", e => {
+  const openDialog = document.querySelector(".modal.show, .decision.show");
+  if (e.key === "Tab" && openDialog) {
+    const focusable = [...openDialog.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter(el => el.offsetParent !== null);
+    if (focusable.length) { const first = focusable[0], last = focusable[focusable.length - 1]; if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); } }
+    return;
+  }
   if (e.key !== "Escape") return;
   if (document.getElementById("rulesModal").classList.contains("show")) document.getElementById("closeRules").click();
+  else if (document.getElementById("settingsModal").classList.contains("show")) document.getElementById("closeSettings").click();
   else if (document.getElementById("onlineModal").classList.contains("show")) closeOnlineModal();
   else if (document.body.classList.contains("mobile-focus")) exitMobileFocus();
 });
@@ -1442,6 +1955,8 @@ function shoot() {
   cue.vx = Math.cos(aimAngle) * v;
   cue.vy = Math.sin(aimAngle) * v;
   shots++;
+  matchStats[turn].shots++;
+  trackEvent("shot", { mode, turn, power: Math.round(power * 100) });
   sndShoot(power);
   state = "roll";
   power = 0;
@@ -1451,10 +1966,30 @@ function shoot() {
 function finishMatch(title, text, winner = null) {
   matchWinner = winner;
   state = "over";
-  document.querySelector("#overlay h2").textContent = title;
-  document.getElementById("finalText").textContent = text;
+  renderResult(title, text, winner);
   document.getElementById("overlay").classList.add("show");
+  trackEvent("game_finish", { mode, winner, shots, duration_seconds: Math.round((Date.now() - matchStartedAt) / 1000) });
   refreshHud();
+}
+
+function renderResult(title, text, winner) {
+  const names = [0, 1].map(i => online.room?.players?.[onlineRole(i)]?.nickname || `Player ${i + 1}`);
+  const elapsed = Math.max(1, Math.round((Date.now() - matchStartedAt) / 1000));
+  const minutes = Math.floor(elapsed / 60), seconds = String(elapsed % 60).padStart(2, "0");
+  const perspectiveTitle = online.room && winner !== null ? (onlineRoleIndex() === winner ? (settings.language === "en" ? "Victory" : "胜利") : (settings.language === "en" ? "Defeat" : "惜败")) : title;
+  document.querySelector("#overlay h2").textContent = perspectiveTitle;
+  document.getElementById("finalText").textContent = text;
+  document.getElementById("resultScore").textContent = mode === "snooker" ? `${names[0]} ${players[0].score} : ${players[1].score} ${names[1]}` : winner === null ? `${names[0]} · ${names[1]}` : `${names[winner]} · ${settings.language === "en" ? "Winner" : "胜者"}`;
+  const totalPots = matchStats[0].pots + matchStats[1].pots, totalFouls = matchStats[0].fouls + matchStats[1].fouls, maxStreak = Math.max(matchStats[0].maxStreak, matchStats[1].maxStreak);
+  const stats = settings.language === "en" ? [[`${minutes}:${seconds}`,"Duration"],[shots,"Shots"],[totalPots,"Pots"],[totalFouls,"Fouls"],[maxStreak,"Best run"]] : [[`${minutes}:${seconds}`,"比赛时长"],[shots,"总击球"],[totalPots,"进球"],[totalFouls,"犯规"],[maxStreak,"最大连进"]];
+  const root = document.getElementById("resultStats"); root.replaceChildren();
+  stats.forEach(([value, label]) => { const item = document.createElement("div"); item.className = "result-stat"; const b = document.createElement("b"), span = document.createElement("span"); b.textContent = value; span.textContent = label; item.append(b, span); root.appendChild(item); });
+}
+
+async function shareResult() {
+  const text = `${document.querySelector("#overlay h2").textContent} · ${document.getElementById("resultScore").textContent} · ${t("homeTitle")}`;
+  try { if (navigator.share) await navigator.share({ title: t("homeTitle"), text, url: location.origin + location.pathname }); else { await navigator.clipboard.writeText(text); showToast(settings.language === "en" ? "Result copied" : "战绩已复制"); } }
+  catch (e) { if (e.name !== "AbortError") showToast(settings.language === "en" ? "Could not share result" : "战绩分享未完成"); }
 }
 
 function switchTurn() { turn = 1 - turn; }
@@ -1493,9 +2028,11 @@ function beginBallInHand(reason, scope = "table", message = "") {
   online.placementNotice = "";
   cuePotted = false;
   placement = { x: scope === "kitchen" ? L + PW * .12 : mouse.x, y: scope === "kitchen" ? CY : mouse.y, valid: false, scope };
+  placementOrigin = { x: placement.x, y: placement.y };
   updatePlacement(placement);
   haptic([14, 24, 14]);
-  showToast(message || `${reason} · Player ${turn + 1} 获得${scope === "kitchen" ? "线后" : "全台"}自由球`);
+  document.getElementById("placementHelp").textContent = settings.language === "en" ? "Move the cue ball to a green legal position" : `${reason} · 移动白球到绿色合法区域`;
+  showToast(message || `犯规 · ${reason} · Player ${turn + 1} 获得${scope === "kitchen" ? "线后" : "全台"}自由球`);
   refreshHud();
 }
 
@@ -1507,6 +2044,7 @@ function confirmPlacement() {
   }
   kitchenRestriction = placement.scope === "kitchen";
   placement = null;
+  placementOrigin = null;
   state = "aim";
   if (coarsePointer) power = mobilePower;
   if (!coarsePointer) aimAngle = Math.atan2(mouse.y - cue.y, mouse.x - cue.x);
@@ -1517,7 +2055,7 @@ function confirmPlacement() {
 }
 
 function updateDialogLock() {
-  document.body.classList.toggle("dialog-open", document.getElementById("rulesModal").classList.contains("show") || document.getElementById("onlineModal").classList.contains("show") || document.getElementById("decisionModal").classList.contains("show"));
+  document.body.classList.toggle("dialog-open", !document.getElementById("homeView").hidden || document.getElementById("rulesModal").classList.contains("show") || document.getElementById("onlineModal").classList.contains("show") || document.getElementById("settingsModal").classList.contains("show") || document.getElementById("decisionModal").classList.contains("show"));
 }
 
 function hideDecision() {
@@ -1557,6 +2095,9 @@ function rerackEight(opener, text) {
 function registerEightFoul(reason, scope = "table") {
   const fouler = turn, opponent = 1 - fouler;
   players[fouler].fouls++;
+  matchStats[fouler].fouls++;
+  matchStats[fouler].streak = 0;
+  trackEvent("foul", { mode, turn: fouler, reason });
   if (players[fouler].fouls >= 3) {
     finishMatch(`PLAYER ${opponent + 1} 获胜`, `Player ${fouler + 1} 连续第三次犯规`, opponent);
     return;
@@ -1655,6 +2196,9 @@ function settleSnooker() {
   const onValue = SNOOKER_COLORS[on] ? SNOOKER_COLORS[on].value : on === "red" ? 1 : 4;
   const relevant = Math.max(4, onValue, first ? first.value : 0, ...shotPots.map(b => b.value));
   if (reason) {
+    matchStats[turn].fouls++;
+    matchStats[turn].streak = 0;
+    trackEvent("foul", { mode, turn, reason });
     players[1 - turn].score += relevant;
     shotPots.filter(b => b.kind !== "red").forEach(safeRespot);
     switchTurn();
@@ -1692,7 +2236,13 @@ function settleSnooker() {
   refreshHud();
 }
 
-function settleShot() { if (mode === "eight") settleEight(); else settleSnooker(); }
+function settleShot() {
+  const shooter = turn, potted = shotPots.filter(ball => ball.n !== 0).length;
+  matchStats[shooter].pots += potted;
+  matchStats[shooter].streak = potted ? matchStats[shooter].streak + potted : 0;
+  matchStats[shooter].maxStreak = Math.max(matchStats[shooter].maxStreak, matchStats[shooter].streak);
+  if (mode === "eight") settleEight(); else settleSnooker();
+}
 
 function respotCue() {
   let x = L + PW * (mode === "snooker" ? 0.14 : 0.22), y = mode === "snooker" ? CY + PH * .18 : CY;
@@ -1818,7 +2368,8 @@ function railAperture(axis, x, y) {
 
 function predict() {
   const d = { x: Math.cos(aimAngle), y: Math.sin(aimAngle) };
-  const h1 = sweepRay(cue.x, cue.y, d.x, d.y, [cue], Infinity);
+  const maxAim = settings.aimAssist === "short" ? 280 : 560;
+  const h1 = sweepRay(cue.x, cue.y, d.x, d.y, [cue], maxAim);
 
   if (h1.ball) {
     const gx = cue.x + d.x * h1.t, gy = cue.y + d.y * h1.t;
@@ -1834,6 +2385,8 @@ function predict() {
       sec: { x: h1.ball.x + nx * h2.t, y: h1.ball.y + ny * h2.t, ball: !!h2.ball }
     };
   }
+
+  if (h1.t >= maxAim) return { gx: cue.x + d.x * maxAim, gy: cue.y + d.y * maxAim, ball: false, ref: null };
 
   let ax = "x";
   let wt = Infinity;
@@ -2009,6 +2562,7 @@ function drawPlacementGuide() {
 
 function drawAiming() {
   if (state !== "aim" && state !== "charge") return;
+  if (settings.aimAssist !== "off") {
   const pred = predict();
   const march = (performance.now() / 28) % 30;
   const aimWeight = coarsePointer ? 1.55 : 1;
@@ -2090,6 +2644,7 @@ function drawAiming() {
     ctx.setLineDash([]);
   }
   ctx.restore();
+  }
 
   const gap = 14 + (state === "charge" ? power * power * 110 : 0);
   const a = aimAngle;

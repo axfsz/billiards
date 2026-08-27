@@ -4,6 +4,7 @@ import { mkdir, open, readFile, realpath, rename, stat } from 'node:fs/promises'
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer, WebSocket } from 'ws';
+import QRCode from 'qrcode';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROLES = ['PLAYER_1', 'PLAYER_2'];
@@ -336,6 +337,15 @@ export function createGameServer(options = {}) {
     touch(room);
     broadcast(room);
     return true;
+  }
+
+  function roomForInvite(token) {
+    if (!/^[A-Za-z0-9_-]{32,64}$/.test(token || '')) throw apiError(404, 'INVITE_NOT_FOUND', 'Invite was not found');
+    const room = [...rooms.values()].find((item) => item.inviteToken === token);
+    if (!room) throw apiError(404, 'INVITE_NOT_FOUND', 'Invite was not found');
+    if (room.status === 'EXPIRED' || expireWaiting(room)) throw apiError(410, 'INVITE_EXPIRED', 'Invite has expired');
+    if (room.status !== 'WAITING' || room.players.PLAYER_2) throw apiError(409, 'ROOM_FULL', 'Room already has two players');
+    return room;
   }
 
   function joinRoom(userId, body) {
@@ -723,6 +733,17 @@ export function createGameServer(options = {}) {
       if (url.pathname === '/api/session' && req.method === 'GET') {
         const room = rooms.get(userRooms.get(userId));
         return sendJson(res, 200, { authenticated: true, room: room && roleFor(room, userId) ? publicRoom(room, userId) : null });
+      }
+      const inviteMatch = url.pathname.match(/^\/api\/invites\/([A-Za-z0-9_-]{32,64})(?:\/(qr\.svg))?$/);
+      if (inviteMatch && req.method === 'GET') {
+        rateLimit(`invite-preview:${clientKey(req)}`, 60);
+        const room = roomForInvite(inviteMatch[1]);
+        if (!inviteMatch[2]) return sendJson(res, 200, { invite: { inviter_nickname: room.players.PLAYER_1.nickname, mode: room.mode, status: room.status, expires_at: room.inviteExpiresAt } });
+        const inviteUrl = `${protocol(req)}://${req.headers.host}/?invite=${encodeURIComponent(room.inviteToken)}`;
+        const svg = await QRCode.toString(inviteUrl, { type: 'svg', margin: 1, width: 220, color: { dark: '#101713', light: '#ffffff' } });
+        res.writeHead(200, { 'Content-Type': 'image/svg+xml; charset=utf-8', 'Content-Length': Buffer.byteLength(svg), 'Cache-Control': 'no-store', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'" });
+        res.end(svg);
+        return;
       }
       if (url.pathname === '/api/rooms' && req.method === 'POST') {
         rateLimit(`create:${userId}`, 10, 15 * 60_000);

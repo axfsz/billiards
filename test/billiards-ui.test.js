@@ -22,6 +22,12 @@ async function nativeClick(page, target, touch) {
   else await page.mouse.click(x, y);
 }
 
+async function startLocalGame(page, touch) {
+  await page.locator('#quickStartBtn').waitFor({ state: 'visible' });
+  await nativeClick(page, '#quickStartBtn', touch);
+  await page.waitForFunction(() => document.getElementById('homeView').hidden);
+}
+
 async function returnFromOnlineRoom(browser, page, base, touch) {
   await nativeClick(page, '#onlineBtn', touch);
   await page.locator('#onlineModal.show').waitFor();
@@ -31,15 +37,16 @@ async function returnFromOnlineRoom(browser, page, base, touch) {
   const inviteCode = await page.locator('.online-code').textContent();
   await nativeClick(page, '#closeOnline', touch);
   await page.waitForFunction(() => !document.getElementById('onlineModal').classList.contains('show'));
-  const guest = await browser.newContext({ viewport: DESKTOP });
+  const guest = await browser.newContext({ viewport: DESKTOP, locale: 'zh-CN' });
   const guestPage = await guest.newPage();
   try {
     await guestPage.goto(`${base}/`, { waitUntil: 'networkidle' });
+    await startLocalGame(guestPage, false);
     await nativeClick(guestPage, '#onlineBtn', false);
     await guestPage.locator('#onlineModal.show').waitFor();
     await nativeClick(guestPage, '#joinCode', false);
     await guestPage.keyboard.type(inviteCode);
-    const join = guestPage.getByRole('button', { name: '加入房间' });
+    const join = guestPage.getByRole('button', { name: '加入比赛' });
     await join.waitFor({ state: 'visible' });
     await nativeClick(guestPage, join, false);
     await page.waitForFunction(() => document.getElementById('matchInfoText').textContent.includes('· 在线'), undefined, { timeout: 5_000 });
@@ -55,6 +62,7 @@ async function returnFromOnlineRoom(browser, page, base, touch) {
     await guest.close();
   }
   await page.waitForFunction(() => document.getElementById('onlineBtn').textContent === '在线对局', undefined, { timeout: 5_000 });
+  await startLocalGame(page, touch);
   await page.waitForTimeout(250); // Let a queued room-state WebSocket message arrive if one exists.
 }
 
@@ -150,7 +158,7 @@ async function installClickBreakpoints(page, base) {
 }
 
 async function exercisePlacement(browser, base, { viewport, touch, inspectClosure, cycleOnline, confirmViaDoubleClick = false }) {
-  const context = await browser.newContext({ viewport, hasTouch: touch, isMobile: touch });
+  const context = await browser.newContext({ viewport, hasTouch: touch, isMobile: touch, locale: 'zh-CN' });
   const page = await context.newPage();
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
@@ -185,6 +193,7 @@ async function exercisePlacement(browser, base, { viewport, touch, inspectClosur
   if (inspectClosure) debuggerProbe = await installClickBreakpoints(page, base);
   await page.goto(`${base}/`, { waitUntil: 'networkidle' });
   await page.locator('#shootBtn').waitFor({ state: 'attached' });
+  await startLocalGame(page, touch);
   if (debuggerProbe) await debuggerProbe.arm();
 
   const localHud = await page.evaluate(() => ({

@@ -2389,9 +2389,20 @@ function railAperture(axis, x, y) {
   return x < L + CORNER_MOUTH || x > RT - CORNER_MOUTH || Math.abs(x - CX) < SIDE_MOUTH;
 }
 
+function aimAssistRange() {
+  const playableCorners = [
+    [L + R, T + R],
+    [RT - R, T + R],
+    [L + R, BT - R],
+    [RT - R, BT - R],
+  ];
+  const fullTableReach = Math.max(...playableCorners.map(([x, y]) => Math.hypot(x - cue.x, y - cue.y))) + R;
+  return settings.aimAssist === "short" ? fullTableReach * 0.65 : fullTableReach;
+}
+
 function predict() {
   const d = { x: Math.cos(aimAngle), y: Math.sin(aimAngle) };
-  const maxAim = settings.aimAssist === "short" ? 280 : 560;
+  const maxAim = aimAssistRange();
   const h1 = sweepRay(cue.x, cue.y, d.x, d.y, [cue], maxAim);
 
   if (h1.ball) {

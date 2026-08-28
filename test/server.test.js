@@ -546,6 +546,9 @@ test('finished room member can leave safely and release both sessions', async ()
 test('client statically uses placement-aware pointer gates and themed exit confirmation', async () => {
   const html = await readFile(new URL('../billiards.html', import.meta.url), 'utf8');
   assert.match(html, /function onlineCanUseTable\(\) \{ return state === "placement" \? onlineCanPlace\(\) : onlineCanAct\(\); \}/);
+  assert.match(html, /function aimAssistRange\(\) \{/);
+  assert.match(html, /Math\.hypot\(x - cue\.x, y - cue\.y\)/);
+  assert.doesNotMatch(html, /settings\.aimAssist === "short" \? 280 : 560/);
   assert.match(html, /if \(!online\.room\) \{ confirmPlacement\(\); return; \}/);
   assert.match(html, /cv\.addEventListener\("pointermove", e => \{\s+if \(!onlineCanUseTable\(\)\) return;/);
   assert.match(html, /cv\.addEventListener\("pointerdown", e => \{\s+if \(!onlineCanUseTable\(\)\)/);
